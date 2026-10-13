@@ -1,0 +1,1870 @@
+{
+  "window": {
+    "start": "2021-01-01",
+    "end": "2026-10-13 00:00:00",
+    "provider": "auto",
+    "fee_bps": 10.0,
+    "slippage_bps": 5.0
+  },
+  "grid_size": 15,
+  "summary": {
+    "planned": 60,
+    "ran": 60,
+    "errored": 0,
+    "completed_pct": 100.0,
+    "grid_size": 15,
+    "min_trades": 15,
+    "beat_buy_hold": 0,
+    "beat_buy_hold_pct": 0.0,
+    "clean": 0,
+    "clean_pct": 0.0,
+    "positive": 52,
+    "positive_pct": 86.66666666666667,
+    "median_excess_pct": -167.76452625410758,
+    "p25_excess_pct": -227.86221092780707,
+    "p75_excess_pct": -148.3978708908444,
+    "median_sharpe": 0.5054635933308111,
+    "median_total_return_pct": 18.77555039076454,
+    "median_max_drawdown_pct": -11.642615999525024,
+    "median_bars_in_market_pct": 16.10817104054044,
+    "total_trades": 4039,
+    "best": {
+      "label": "BTC/USDT 4h  30/60 s4.0 t5.0",
+      "excess_pct": -56.18188239903037,
+      "total_return_pct": 126.4638334224617,
+      "params": {
+        "fast": 30,
+        "slow": 60,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      }
+    },
+    "worst": {
+      "label": "ETH/USDT 4h  20/100 s2.0 t2.5",
+      "excess_pct": -251.59730563908266
+    },
+    "best_share_pct": 0.0,
+    "median_p_value": 0.09701492537313433,
+    "by_market": [
+      {
+        "market": "BTC/USDT 1d",
+        "cells": 15,
+        "ran": 15,
+        "beat_buy_hold": 0,
+        "beat_buy_hold_pct": 0.0,
+        "median_excess_pct": -165.17290075800244,
+        "median_sharpe": 0.5828687845060313,
+        "trades": 244,
+        "best_label": "10/40 s2.0 t2.5",
+        "best_excess_pct": -141.44587087005684,
+        "best_total_return_pct": 38.91845925600572,
+        "actual_return_pct": 18.532484322115316,
+        "null_median_pct": 5.429167659681666,
+        "null_p95_pct": 29.280552298680476,
+        "p_value": 0.15422885572139303,
+        "expected_max_pct": 29.91723562566629,
+        "null_note": ""
+      },
+      {
+        "market": "ETH/USDT 1d",
+        "cells": 15,
+        "ran": 15,
+        "beat_buy_hold": 0,
+        "beat_buy_hold_pct": 0.0,
+        "median_excess_pct": -236.62974595527996,
+        "median_sharpe": 0.15385601691658538,
+        "trades": 270,
+        "best_label": "10/40 s2.0 t2.5",
+        "best_excess_pct": -198.59309566630668,
+        "best_total_return_pct": 42.02761481521746,
+        "actual_return_pct": 3.9909645262442117,
+        "null_median_pct": 2.420070340003866,
+        "null_p95_pct": 19.739076415295045,
+        "p_value": 0.4577114427860697,
+        "expected_max_pct": 21.486512194713967,
+        "null_note": ""
+      },
+      {
+        "market": "BTC/USDT 4h",
+        "cells": 15,
+        "ran": 15,
+        "beat_buy_hold": 0,
+        "beat_buy_hold_pct": 0.0,
+        "median_excess_pct": -118.01271132831914,
+        "median_sharpe": 0.7645627100841856,
+        "trades": 1758,
+        "best_label": "30/60 s4.0 t5.0",
+        "best_excess_pct": -56.18188239903037,
+        "best_total_return_pct": 126.4638334224617,
+        "actual_return_pct": 49.371000116190885,
+        "null_median_pct": -5.222237372257377,
+        "null_p95_pct": 42.84053062473587,
+        "p_value": 0.03482587064676617,
+        "expected_max_pct": 43.67522642990257,
+        "null_note": ""
+      },
+      {
+        "market": "ETH/USDT 4h",
+        "cells": 15,
+        "ran": 15,
+        "beat_buy_hold": 0,
+        "beat_buy_hold_pct": 0.0,
+        "median_excess_pct": -183.21785879037648,
+        "median_sharpe": 0.665270274204366,
+        "trades": 1767,
+        "best_label": "10/80 s4.0 t5.0",
+        "best_excess_pct": -133.08233498141465,
+        "best_total_return_pct": 100.19418194942591,
+        "actual_return_pct": 55.712783389958375,
+        "null_median_pct": -3.5151494150450158,
+        "null_p95_pct": 53.6894781661584,
+        "p_value": 0.03980099502487562,
+        "expected_max_pct": 52.6528846450735,
+        "null_note": ""
+      }
+    ],
+    "errors": [],
+    "verdict": "It beat buy & hold in only 0% of the 60 combinations (median excess -167.8 points). As a way to beat simply holding, it does not work on any market or setting tested here \u2014 which is what a low-exposure system looks like in a market that mostly rose. Not one cell produced positive excess to concentrate. Random entries drawing the same number of trades, holding times, size, stops and costs matched or beat it only 10% of the time (median across markets), so the timing carries information. Both readings hold at once: the entries carry information against random timing, but a system that is flat most of the time still trails buy & hold in a market that rose. Judge it on risk-adjusted terms, not on headline return."
+  },
+  "cells": [
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 10,
+        "slow": 40,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/40 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 38.91845925600572,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -141.44587087005684,
+        "sharpe": 0.8343929766424567,
+        "max_drawdown_pct": -6.876844159858586,
+        "trades": 27,
+        "win_rate_pct": 44.44444444444444,
+        "profit_factor": 2.706661872745119,
+        "bars_in_market_pct": 19.791666666666664
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 10,
+        "slow": 40,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/40 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 21.479027830732832,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -158.88530229532972,
+        "sharpe": 0.5902424215595089,
+        "max_drawdown_pct": -6.88226962934303,
+        "trades": 27,
+        "win_rate_pct": 37.03703703703704,
+        "profit_factor": 2.058628537865575,
+        "bars_in_market_pct": 21.022727272727273
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 10,
+        "slow": 40,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/40 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 26.58361381751757,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -153.78071630854498,
+        "sharpe": 0.6815206593684479,
+        "max_drawdown_pct": -7.059816523742324,
+        "trades": 26,
+        "win_rate_pct": 34.61538461538461,
+        "profit_factor": 2.3100969927229027,
+        "bars_in_market_pct": 41.42992424242424
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 10,
+        "slow": 80,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/80 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 20.564109041013047,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -159.80022108504951,
+        "sharpe": 0.6446817887072717,
+        "max_drawdown_pct": -7.782306840346287,
+        "trades": 17,
+        "win_rate_pct": 47.05882352941176,
+        "profit_factor": 2.6988837254872786,
+        "bars_in_market_pct": 12.31060606060606
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 10,
+        "slow": 80,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/80 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 17.842799474109494,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -162.52153065195307,
+        "sharpe": 0.5828687845060313,
+        "max_drawdown_pct": -7.010873106404992,
+        "trades": 17,
+        "win_rate_pct": 41.17647058823529,
+        "profit_factor": 2.5065146001956387,
+        "bars_in_market_pct": 14.299242424242426
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 10,
+        "slow": 80,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/80 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 11.554315699031603,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -168.81001442703095,
+        "sharpe": 0.4071371329724399,
+        "max_drawdown_pct": -6.970274509970864,
+        "trades": 16,
+        "win_rate_pct": 37.5,
+        "profit_factor": 1.8243492684306475,
+        "bars_in_market_pct": 27.935606060606062
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 20,
+        "slow": 50,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/50 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 8.996885866355896,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -171.36744425970664,
+        "sharpe": 0.33344672256682345,
+        "max_drawdown_pct": -6.923550457829563,
+        "trades": 17,
+        "win_rate_pct": 47.05882352941176,
+        "profit_factor": 1.820137237839675,
+        "bars_in_market_pct": 13.494318181818182
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 20,
+        "slow": 50,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/50 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 18.532484322115316,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -161.83184580394723,
+        "sharpe": 0.5963837626748736,
+        "max_drawdown_pct": -7.163900534690459,
+        "trades": 17,
+        "win_rate_pct": 41.17647058823529,
+        "profit_factor": 2.6750701981973775,
+        "bars_in_market_pct": 17.09280303030303
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 20,
+        "slow": 50,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/50 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 10.35744461318593,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -170.00688551287664,
+        "sharpe": 0.3671429893032714,
+        "max_drawdown_pct": -7.162649010919486,
+        "trades": 16,
+        "win_rate_pct": 37.5,
+        "profit_factor": 1.6381653038256456,
+        "bars_in_market_pct": 32.00757575757576
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 20,
+        "slow": 100,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/100 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 15.191429368060106,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -165.17290075800244,
+        "sharpe": 0.6018091285588737,
+        "max_drawdown_pct": -5.118805992666264,
+        "trades": 10,
+        "win_rate_pct": 50.0,
+        "profit_factor": 3.8420428092698478,
+        "bars_in_market_pct": 7.765151515151516
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 20,
+        "slow": 100,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/100 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 15.544702235140528,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -164.81962789092202,
+        "sharpe": 0.5957832396286687,
+        "max_drawdown_pct": -5.87960478436953,
+        "trades": 10,
+        "win_rate_pct": 50.0,
+        "profit_factor": 3.455658039975968,
+        "bars_in_market_pct": 9.469696969696969
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 20,
+        "slow": 100,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/100 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 13.46517436328396,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -166.8991557627786,
+        "sharpe": 0.5177387103166744,
+        "max_drawdown_pct": -7.0520367511028414,
+        "trades": 9,
+        "win_rate_pct": 55.55555555555556,
+        "profit_factor": 3.0838132486410097,
+        "bars_in_market_pct": 21.401515151515152
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 30,
+        "slow": 60,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "30/60 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 12.566379195631683,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -167.7979509304309,
+        "sharpe": 0.49318847634494795,
+        "max_drawdown_pct": -5.557462592414897,
+        "trades": 12,
+        "win_rate_pct": 41.66666666666667,
+        "profit_factor": 2.456155266014893,
+        "bars_in_market_pct": 10.653409090909092
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 30,
+        "slow": 60,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "30/60 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 12.633228548278307,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -167.73110157778424,
+        "sharpe": 0.48409456297701164,
+        "max_drawdown_pct": -6.362115838646886,
+        "trades": 12,
+        "win_rate_pct": 41.66666666666667,
+        "profit_factor": 2.358839043037187,
+        "bars_in_market_pct": 12.452651515151516
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 1d",
+      "params": {
+        "fast": 30,
+        "slow": 60,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "30/60 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 9.823053108711077,
+        "buy_hold_return_pct": 180.36433012606255,
+        "excess_return_pct": -170.5412770173515,
+        "sharpe": 0.38279039056721614,
+        "max_drawdown_pct": -7.496818060277544,
+        "trades": 11,
+        "win_rate_pct": 36.36363636363637,
+        "profit_factor": 2.1395793205359075,
+        "bars_in_market_pct": 25.37878787878788
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 10,
+        "slow": 40,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/40 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 42.02761481521746,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -198.59309566630668,
+        "sharpe": 0.8970125526760944,
+        "max_drawdown_pct": -9.13348775726206,
+        "trades": 26,
+        "win_rate_pct": 46.15384615384615,
+        "profit_factor": 2.8620949572431615,
+        "bars_in_market_pct": 19.03409090909091
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 10,
+        "slow": 40,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/40 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 25.602133273173134,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -215.01857720835102,
+        "sharpe": 0.6428933484890224,
+        "max_drawdown_pct": -10.303585806532844,
+        "trades": 26,
+        "win_rate_pct": 50.0,
+        "profit_factor": 2.2749627007730964,
+        "bars_in_market_pct": 24.10037878787879
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 10,
+        "slow": 40,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/40 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 12.963572431382042,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -227.65713805014212,
+        "sharpe": 0.39245154485352973,
+        "max_drawdown_pct": -8.799875984806427,
+        "trades": 26,
+        "win_rate_pct": 42.30769230769231,
+        "profit_factor": 1.8507923047345647,
+        "bars_in_market_pct": 40.672348484848484
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 10,
+        "slow": 80,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/80 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 10.727990256439202,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -229.89272022508496,
+        "sharpe": 0.3040689506678223,
+        "max_drawdown_pct": -13.497313840220349,
+        "trades": 21,
+        "win_rate_pct": 33.33333333333333,
+        "profit_factor": 1.55728047213119,
+        "bars_in_market_pct": 12.073863636363637
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 10,
+        "slow": 80,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/80 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 5.259575992661092,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -235.36113448886306,
+        "sharpe": 0.18361778027737863,
+        "max_drawdown_pct": -11.550848885675524,
+        "trades": 21,
+        "win_rate_pct": 28.57142857142857,
+        "profit_factor": 1.3432551002665671,
+        "bars_in_market_pct": 15.104166666666666
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 10,
+        "slow": 80,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/80 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 0.6151014403365629,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -240.0056090411876,
+        "sharpe": 0.04614029391452658,
+        "max_drawdown_pct": -9.621291332578663,
+        "trades": 21,
+        "win_rate_pct": 28.57142857142857,
+        "profit_factor": 1.0491849623082357,
+        "bars_in_market_pct": 26.84659090909091
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 20,
+        "slow": 50,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/50 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 12.143280920722276,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -228.47742956080188,
+        "sharpe": 0.3667327604547348,
+        "max_drawdown_pct": -10.352852614174946,
+        "trades": 18,
+        "win_rate_pct": 38.88888888888889,
+        "profit_factor": 1.8212703254373912,
+        "bars_in_market_pct": 12.973484848484848
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 20,
+        "slow": 50,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/50 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 3.9909645262442117,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -236.62974595527996,
+        "sharpe": 0.15385601691658538,
+        "max_drawdown_pct": -10.571744191309874,
+        "trades": 18,
+        "win_rate_pct": 33.33333333333333,
+        "profit_factor": 1.2845196995367034,
+        "bars_in_market_pct": 16.051136363636363
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 20,
+        "slow": 50,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/50 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": -2.9679611113638926,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -243.58867159288806,
+        "sharpe": -0.08567712145527932,
+        "max_drawdown_pct": -10.957637540767106,
+        "trades": 18,
+        "win_rate_pct": 33.33333333333333,
+        "profit_factor": 0.7912723420334921,
+        "bars_in_market_pct": 28.314393939393938
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 20,
+        "slow": 100,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/100 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 0.3988885664705233,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -240.22182191505362,
+        "sharpe": 0.03758761056122631,
+        "max_drawdown_pct": -9.24907508178049,
+        "trades": 12,
+        "win_rate_pct": 33.33333333333333,
+        "profit_factor": 1.037238702387351,
+        "bars_in_market_pct": 7.196969696969697
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 20,
+        "slow": 100,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/100 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": -3.913750765535895,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -244.53446124706005,
+        "sharpe": -0.14955513803381523,
+        "max_drawdown_pct": -10.963599697093285,
+        "trades": 12,
+        "win_rate_pct": 25.0,
+        "profit_factor": 0.6532297106815407,
+        "bars_in_market_pct": 8.522727272727272
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 20,
+        "slow": 100,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/100 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": -3.6463514387562124,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -244.26706192028036,
+        "sharpe": -0.14165436484815855,
+        "max_drawdown_pct": -8.912945074095813,
+        "trades": 12,
+        "win_rate_pct": 33.33333333333333,
+        "profit_factor": 0.6163297083525932,
+        "bars_in_market_pct": 18.607954545454543
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 30,
+        "slow": 60,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "30/60 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 4.546833057127864,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -236.0738774243963,
+        "sharpe": 0.17492168901976984,
+        "max_drawdown_pct": -10.181692004506882,
+        "trades": 13,
+        "win_rate_pct": 30.76923076923077,
+        "profit_factor": 1.3868284828855992,
+        "bars_in_market_pct": 8.333333333333332
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 30,
+        "slow": 60,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "30/60 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": -0.6054505481038142,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -241.22616102962797,
+        "sharpe": -9.767352582806467e-06,
+        "max_drawdown_pct": -11.531342682361135,
+        "trades": 13,
+        "win_rate_pct": 30.76923076923077,
+        "profit_factor": 0.947265703223976,
+        "bars_in_market_pct": 10.653409090909092
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": {
+        "fast": 30,
+        "slow": 60,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "30/60 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": -2.920042124700395,
+        "buy_hold_return_pct": 240.62071048152416,
+        "excess_return_pct": -243.54075260622454,
+        "sharpe": -0.09935191319178768,
+        "max_drawdown_pct": -10.298338631080838,
+        "trades": 13,
+        "win_rate_pct": 30.76923076923077,
+        "profit_factor": 0.7533489728494455,
+        "bars_in_market_pct": 21.354166666666664
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 10,
+        "slow": 40,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/40 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 6.4262641232663675,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -176.2194516982257,
+        "sharpe": 0.14677321183897227,
+        "max_drawdown_pct": -31.48034899115524,
+        "trades": 195,
+        "win_rate_pct": 32.30769230769231,
+        "profit_factor": 1.0361196247398614,
+        "bars_in_market_pct": 17.918344784016426
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 10,
+        "slow": 40,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/40 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 27.874199275287516,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -154.77151654620457,
+        "sharpe": 0.3788832480710732,
+        "max_drawdown_pct": -27.313447819691206,
+        "trades": 195,
+        "win_rate_pct": 32.82051282051282,
+        "profit_factor": 1.1570430534639045,
+        "bars_in_market_pct": 24.030640448550898
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 10,
+        "slow": 40,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/40 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 69.05053881644609,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -113.59517700504598,
+        "sharpe": 0.7645627100841856,
+        "max_drawdown_pct": -25.613159862345935,
+        "trades": 195,
+        "win_rate_pct": 25.64102564102564,
+        "profit_factor": 1.450463784962956,
+        "bars_in_market_pct": 43.20461186132828
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 10,
+        "slow": 80,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/80 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 18.43300402893009,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -164.21271179256198,
+        "sharpe": 0.322476722342214,
+        "max_drawdown_pct": -25.507362301918878,
+        "trades": 119,
+        "win_rate_pct": 39.49579831932773,
+        "profit_factor": 1.1677399729350155,
+        "bars_in_market_pct": 11.663902708678828
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 10,
+        "slow": 80,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/80 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 46.08591223495273,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -136.55980358653935,
+        "sharpe": 0.6409995344028562,
+        "max_drawdown_pct": -17.869797222503216,
+        "trades": 119,
+        "win_rate_pct": 42.016806722689076,
+        "profit_factor": 1.4270421156087532,
+        "bars_in_market_pct": 16.023059306641397
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 10,
+        "slow": 80,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/80 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 110.14725368201188,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -72.4984621394802,
+        "sharpe": 1.1665375147273849,
+        "max_drawdown_pct": -13.676100695106918,
+        "trades": 119,
+        "win_rate_pct": 31.092436974789916,
+        "profit_factor": 1.969392037835395,
+        "bars_in_market_pct": 32.583116165205716
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 20,
+        "slow": 50,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/50 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 20.1246350761078,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -162.52108074538427,
+        "sharpe": 0.3471836089789922,
+        "max_drawdown_pct": -16.576861644038143,
+        "trades": 115,
+        "win_rate_pct": 38.26086956521739,
+        "profit_factor": 1.2157736965557637,
+        "bars_in_market_pct": 11.569138434810077
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 20,
+        "slow": 50,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/50 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 49.371000116190885,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -133.2747157053012,
+        "sharpe": 0.6799651040291196,
+        "max_drawdown_pct": -13.178211676382778,
+        "trades": 115,
+        "win_rate_pct": 38.26086956521739,
+        "profit_factor": 1.5197214653059028,
+        "bars_in_market_pct": 16.165205717444522
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 20,
+        "slow": 50,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/50 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 91.33154489857829,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -91.31417092291379,
+        "sharpe": 1.050930889459215,
+        "max_drawdown_pct": -15.655596907894232,
+        "trades": 115,
+        "win_rate_pct": 31.30434782608696,
+        "profit_factor": 1.9574972197749658,
+        "bars_in_market_pct": 32.57521914238332
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 20,
+        "slow": 100,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/100 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 26.06057726829225,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -156.58513855319984,
+        "sharpe": 0.4890436888772093,
+        "max_drawdown_pct": -13.085481899121032,
+        "trades": 70,
+        "win_rate_pct": 35.714285714285715,
+        "profit_factor": 1.485862102666663,
+        "bars_in_market_pct": 7.5574508410329315
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 20,
+        "slow": 100,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/100 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 73.68411132298682,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -108.96160449850525,
+        "sharpe": 0.9955566616504091,
+        "max_drawdown_pct": -11.734383113374525,
+        "trades": 70,
+        "win_rate_pct": 40.0,
+        "profit_factor": 2.1995605722905855,
+        "bars_in_market_pct": 10.921582563373608
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 20,
+        "slow": 100,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/100 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 100.5588486432142,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -82.08686717827787,
+        "sharpe": 1.2435130149133549,
+        "max_drawdown_pct": -12.973542177372765,
+        "trades": 70,
+        "win_rate_pct": 40.0,
+        "profit_factor": 2.4067775019830875,
+        "bars_in_market_pct": 24.101713653952462
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 30,
+        "slow": 60,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "30/60 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 64.63300449317293,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -118.01271132831914,
+        "sharpe": 0.8796934311425944,
+        "max_drawdown_pct": -13.14970226752472,
+        "trades": 87,
+        "win_rate_pct": 36.7816091954023,
+        "profit_factor": 1.8238335640484,
+        "bars_in_market_pct": 9.310589907604832
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 30,
+        "slow": 60,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "30/60 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 71.19941239809764,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -111.44630342339444,
+        "sharpe": 0.9501128348049213,
+        "max_drawdown_pct": -12.44830314846126,
+        "trades": 87,
+        "win_rate_pct": 40.229885057471265,
+        "profit_factor": 1.98202818592688,
+        "bars_in_market_pct": 12.745794835347073
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "fast": 30,
+        "slow": 60,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "30/60 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 126.4638334224617,
+        "buy_hold_return_pct": 182.64571582149208,
+        "excess_return_pct": -56.18188239903037,
+        "sharpe": 1.3490163518374012,
+        "max_drawdown_pct": -11.232161734653534,
+        "trades": 87,
+        "win_rate_pct": 40.229885057471265,
+        "profit_factor": 2.526519980971058,
+        "bars_in_market_pct": 28.097607202084813
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 10,
+        "slow": 40,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/40 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": -7.050694204817587,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -240.32721113565813,
+        "sharpe": -0.02126898167802771,
+        "max_drawdown_pct": -27.80495669708225,
+        "trades": 203,
+        "win_rate_pct": 33.99014778325123,
+        "profit_factor": 0.9569046559989675,
+        "bars_in_market_pct": 17.01018715944089
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 10,
+        "slow": 40,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/40 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 33.46792786436046,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -199.8085890664801,
+        "sharpe": 0.41495625356106874,
+        "max_drawdown_pct": -23.820308608011032,
+        "trades": 203,
+        "win_rate_pct": 30.541871921182267,
+        "profit_factor": 1.1920147129588978,
+        "bars_in_market_pct": 23.50153991945037
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 10,
+        "slow": 40,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/40 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 83.31381636620696,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -149.9627005646336,
+        "sharpe": 0.8162547313879072,
+        "max_drawdown_pct": -19.76472364593913,
+        "trades": 203,
+        "win_rate_pct": 22.660098522167488,
+        "profit_factor": 1.433997127755581,
+        "bars_in_market_pct": 45.336808023375184
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 10,
+        "slow": 80,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/80 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 19.018616459413764,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -214.2579004714268,
+        "sharpe": 0.3296903801593487,
+        "max_drawdown_pct": -18.779318284561697,
+        "trades": 114,
+        "win_rate_pct": 38.59649122807017,
+        "profit_factor": 1.1844624645145603,
+        "bars_in_market_pct": 10.337202874516308
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 10,
+        "slow": 80,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/80 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 82.67752447141008,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -150.59899245943046,
+        "sharpe": 0.8854263355771219,
+        "max_drawdown_pct": -13.528122926282215,
+        "trades": 114,
+        "win_rate_pct": 37.719298245614034,
+        "profit_factor": 1.7290735958046262,
+        "bars_in_market_pct": 14.641080312722105
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 10,
+        "slow": 80,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "10/80 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 100.19418194942591,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -133.08233498141465,
+        "sharpe": 1.037983958666684,
+        "max_drawdown_pct": -15.272591730089447,
+        "trades": 114,
+        "win_rate_pct": 29.82456140350877,
+        "profit_factor": 1.8659519472129156,
+        "bars_in_market_pct": 31.311695490799966
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 20,
+        "slow": 50,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/50 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 6.457788615394877,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -226.81872831544567,
+        "sharpe": 0.15432525089914884,
+        "max_drawdown_pct": -19.68300333411176,
+        "trades": 115,
+        "win_rate_pct": 33.91304347826087,
+        "profit_factor": 1.060309668523765,
+        "bars_in_market_pct": 10.534628445076207
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 20,
+        "slow": 50,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/50 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 55.712783389958375,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -177.5637335408822,
+        "sharpe": 0.674036313656764,
+        "max_drawdown_pct": -17.481389106027834,
+        "trades": 115,
+        "win_rate_pct": 34.78260869565217,
+        "profit_factor": 1.4842711828988415,
+        "bars_in_market_pct": 14.956961225617944
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 20,
+        "slow": 50,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/50 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 89.5731350613638,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -143.70338186947674,
+        "sharpe": 0.9425764165530917,
+        "max_drawdown_pct": -13.656157819941628,
+        "trades": 115,
+        "win_rate_pct": 33.04347826086956,
+        "profit_factor": 1.7068075157526716,
+        "bars_in_market_pct": 34.92063492063492
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 20,
+        "slow": 100,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/100 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": -18.32078870824211,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -251.59730563908266,
+        "sharpe": -0.3688109166938649,
+        "max_drawdown_pct": -21.920407332135163,
+        "trades": 75,
+        "win_rate_pct": 34.66666666666667,
+        "profit_factor": 0.7086564129144095,
+        "bars_in_market_pct": 5.749032614704257
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 20,
+        "slow": 100,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/100 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 43.00580491667263,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -190.27071201416794,
+        "sharpe": 0.613665456328546,
+        "max_drawdown_pct": -17.075346035910922,
+        "trades": 75,
+        "win_rate_pct": 38.666666666666664,
+        "profit_factor": 1.6480234838241687,
+        "bars_in_market_pct": 9.342177998894417
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 20,
+        "slow": 100,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "20/100 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 93.8473105615142,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -139.42920636932635,
+        "sharpe": 1.077122401186219,
+        "max_drawdown_pct": -12.742289033055576,
+        "trades": 75,
+        "win_rate_pct": 34.66666666666667,
+        "profit_factor": 2.299257154566898,
+        "bars_in_market_pct": 24.149095790886836
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 30,
+        "slow": 60,
+        "atr_period": 14,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "30/60 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": -10.132801681940185,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -243.40931861278074,
+        "sharpe": -0.15616962893543662,
+        "max_drawdown_pct": -21.393568371544713,
+        "trades": 82,
+        "win_rate_pct": 31.70731707317073,
+        "profit_factor": 0.8692876761450046,
+        "bars_in_market_pct": 6.6887783305693755
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 30,
+        "slow": 60,
+        "atr_period": 14,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "30/60 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 50.05865814046408,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -183.21785879037648,
+        "sharpe": 0.665270274204366,
+        "max_drawdown_pct": -16.27384958894702,
+        "trades": 82,
+        "win_rate_pct": 39.02439024390244,
+        "profit_factor": 1.5811666376033455,
+        "bars_in_market_pct": 10.653083787412147
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": {
+        "fast": 30,
+        "slow": 60,
+        "atr_period": 14,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true
+      },
+      "params_label": "30/60 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 93.63228372685779,
+        "buy_hold_return_pct": 233.27651693084056,
+        "excess_return_pct": -139.64423320398276,
+        "sharpe": 1.0307300575787348,
+        "max_drawdown_pct": -15.720271360785231,
+        "trades": 82,
+        "win_rate_pct": 39.02439024390244,
+        "profit_factor": 1.9399455080218502,
+        "bars_in_market_pct": 26.691937139698336
+      },
+      "good": false,
+      "clean": false
+    }
+  ],
+  "nulls": [
+    {
+      "market": "BTC/USDT 1d",
+      "params": "20/50 s2.5 t3.0",
+      "actual_return_pct": 18.532484322115316,
+      "actual_trades": 17,
+      "null_runs": 200,
+      "null_median_pct": 5.429167659681666,
+      "null_p95_pct": 29.280552298680476,
+      "expected_max_pct": 29.91723562566629,
+      "selection_n": 15,
+      "p_value": 0.15422885572139303,
+      "note": ""
+    },
+    {
+      "market": "ETH/USDT 1d",
+      "params": "20/50 s2.5 t3.0",
+      "actual_return_pct": 3.9909645262442117,
+      "actual_trades": 18,
+      "null_runs": 200,
+      "null_median_pct": 2.420070340003866,
+      "null_p95_pct": 19.739076415295045,
+      "expected_max_pct": 21.486512194713967,
+      "selection_n": 15,
+      "p_value": 0.4577114427860697,
+      "note": ""
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": "20/50 s2.5 t3.0",
+      "actual_return_pct": 49.371000116190885,
+      "actual_trades": 115,
+      "null_runs": 200,
+      "null_median_pct": -5.222237372257377,
+      "null_p95_pct": 42.84053062473587,
+      "expected_max_pct": 43.67522642990257,
+      "selection_n": 15,
+      "p_value": 0.03482587064676617,
+      "note": ""
+    },
+    {
+      "market": "ETH/USDT 4h",
+      "params": "20/50 s2.5 t3.0",
+      "actual_return_pct": 55.712783389958375,
+      "actual_trades": 115,
+      "null_runs": 200,
+      "null_median_pct": -3.5151494150450158,
+      "null_p95_pct": 53.6894781661584,
+      "expected_max_pct": 52.6528846450735,
+      "selection_n": 15,
+      "p_value": 0.03980099502487562,
+      "note": ""
+    }
+  ],
+  "null_reference": "20/50 s2.5 t3.0"
+}

@@ -1,0 +1,5 @@
+# The engine itself needs exactly one dependency.
+numpy>=1.26
+
+# Optional: only for Candles.to_dataframe() and other ad-hoc exploration.
+# pandas>=2.0

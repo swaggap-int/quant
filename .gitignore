@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Fetched candles are reproducible from the exchanges; safe to drop.
+data/cache/
+
+# Server log from serve_dashboard.py, and captured sweep output.
+dashboard.log
+results/*.log
