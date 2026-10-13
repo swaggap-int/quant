@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backtest recorder</title>
+<script>
+  /* Theme before first paint, so there is no flash of the wrong one.
+     Stored choice wins; otherwise follow the operating system. */
+  (function () {
+    try {
+      var stored = localStorage.getItem("recorder-theme");
+      var dark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+    } catch (e) {
+      document.documentElement.dataset.theme = "dark";
+    }
+  })();
+</script>
+<style>
+  /* =====================================================================
+     Two themes, one instrument.
+
+     The chrome is quiet — soft cards on a near-white or near-black ground,
+     rounded surfaces, one accent — because the readouts are what matter.
+     Amber is the accent in both themes: it is already the strategy trace,
+     so the interface accent and the data share one meaning.
+
+     Light leans on near-black for active states (a filled pill), dark leans
+     on amber, which is how the reference layouts mark "you are here".
+     ===================================================================== */
+
+  :root {
+    --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Inter", sans-serif;
+    --mono: "Cascadia Mono", "SF Mono", Consolas, ui-monospace, monospace;
+
+    --r-card: 14px;
+    --r-ctl: 9px;
+    --r-pill: 8px;
+    --r-sheet: 18px;
+
+    --step: 220ms;
+    --ease: cubic-bezier(.22, .8, .24, 1);
+  }
+
+  /* -- dark (default) ---------------------------------------------------- */
+
+  [data-theme="dark"] {
+    color-scheme: dark;
+    --bg:         #0E1116;
+    --bg-rail:    #131820;
+    --card:       #171C23;
+    --card-2:     #1E242C;
+    --line:       #262E38;
+    --rule-soft:  #1E242C;
+    --text:       #E7EBEF;
+    --muted:      #9AA6B1;
+    --muted-dim:  #8794A0;   /* both clear 4.5:1 on the dark ground */
+    --accent:     #E8A33D;
+    --accent-ink: #1A1206;
+    --chip-ink:   #0E1116;
+    --strong:     #E8A33D;
+    --strong-ink: #1A1206;
+    --trace:      #E8A33D;
+    --bench:      #5F8CA3;
+    --loss:       #D9715E;
+    --gain:       #4FB08D;
+    --wash:       rgba(232, 163, 61, .12);
+    --shadow-1:   0 1px 2px rgba(0, 0, 0, .5);
+    --shadow-2:   0 18px 40px -22px rgba(0, 0, 0, .95);
+  }
+
+  /* -- light ------------------------------------------------------------- */
+
+  [data-theme="light"] {
+    color-scheme: light;
+    --bg:         #EFF2F0;
+    --bg-rail:    #FFFFFF;
+    --card:       #FFFFFF;
+    --card-2:     #F5F7F6;
+    --line:       #E1E6E2;
+    --rule-soft:  #EDF0EE;
+    --text:       #10161A;
+    --muted:      #5A646C;
+    --muted-dim:  #6B757C;   /* 11px labels still have to be readable */
+    --accent:     #9A6511;
+    --accent-ink: #FFFFFF;
+    --chip-ink:   #FFFFFF;
+    --strong:     #10161A;
+    --strong-ink: #FFFFFF;
+    --trace:      #C07E12;
+    --bench:      #6E8794;
+    --loss:       #B03A2E;
+    --gain:       #12705A;
+    --wash:       rgba(16, 22, 26, .05);
+    --shadow-1:   0 1px 2px rgba(16, 22, 26, .06);
+    --shadow-2:   0 16px 34px -24px rgba(16, 22, 26, .35);
+  }
+
+  * { box-sizing: border-box; }
+
+  /* Slim scrollbars, so the reference's soft surfaces are not sliced by a
+     default grey trough on the run list, the table and the guide. */
+  * { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--line); border-radius: 8px; border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted-dim); background-clip: content-box; }
+
+  /* Class rules below set display, which would otherwise beat [hidden]. */
+  [hidden] { display: none !important; }
+
+  html, body { background: var(--bg); }
+
+  body {
+    margin: 0;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14.5px;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+
+  a { color: var(--accent); }
+  code, pre { font-family: var(--mono); font-size: 12.5px; }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  /* -- shell ------------------------------------------------------------- */
+
+  .shell { display: grid; grid-template-columns: 268px minmax(0, 1fr); min-height: 100vh; }
+
+  .rail {
+    background: var(--bg-rail);
+    border-right: 1px solid var(--line);
+    padding: 18px 14px 16px;
+    display: flex; flex-direction: column; gap: 22px;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+
+  .brand { display: flex; align-items: center; gap: 10px; padding: 2px 4px 0; }
+  .mark {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--strong); color: var(--strong-ink);
+    display: grid; place-items: center; flex: none;
+  }
+  .mark svg { width: 18px; height: 18px; display: block; }
+  .brand-name { font-size: 14px; font-weight: 600; letter-spacing: -.01em; line-height: 1.15; }
+  .brand-name span { display: block; color: var(--muted); font-weight: 400; font-size: 12px; letter-spacing: 0; }
+
+  .railh {
+    margin: 0 0 8px; padding: 0 4px;
+    font-size: 11.5px; font-weight: 600; letter-spacing: .02em;
+    color: var(--muted-dim);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .chip {
+    margin-left: auto; min-width: 20px; text-align: center;
+    padding: 1px 6px; border-radius: 20px;
+    background: var(--card-2); border: 1px solid var(--line);
+    color: var(--muted); font-size: 11px; font-weight: 500;
+  }
+
+  .runlist { display: flex; flex-direction: column; gap: 3px; max-height: 46vh; overflow-y: auto; padding-right: 2px; }
+
+  .runitem {
+    display: grid; gap: 2px; text-align: left; width: 100%;
+    padding: 8px 10px; border: 1px solid transparent; border-radius: var(--r-pill);
+    background: transparent; color: var(--text);
+    cursor: pointer; font: inherit; font-size: 13px;
+    transition: background var(--step) var(--ease), transform var(--step) var(--ease),
+                color var(--step) var(--ease), border-color var(--step) var(--ease);
+  }
+  .runitem:hover { background: var(--card-2); transform: translateX(2px); }
+  .runitem .top { display: flex; align-items: baseline; gap: 6px; }
+  .runitem .sym { font-weight: 600; letter-spacing: -.01em; }
+  .runitem .tf {
+    font-size: 11px; color: var(--muted-dim);
+    border: 1px solid var(--line); border-radius: 5px; padding: 0 4px;
+  }
+  .runitem .ret { margin-left: auto; font-size: 12.5px; font-weight: 600; }
+  .runitem .meta { font-size: 11.5px; color: var(--muted); }
+  .runitem[aria-current="true"] {
+    background: var(--strong); color: var(--strong-ink); border-color: var(--strong);
+  }
+  .runitem[aria-current="true"] .tf { border-color: transparent; color: inherit; opacity: .7; }
+  .runitem[aria-current="true"] .meta { color: inherit; opacity: .8; }
+  .runitem[aria-current="true"] .ret { color: inherit; }
+
+  .viewbits { display: flex; flex-direction: column; gap: 3px; }
+
+  .railfoot { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+  .ver { color: var(--muted-dim); font-size: 11.5px; padding: 0 4px; }
+
+  /* -- content ----------------------------------------------------------- */
+
+  .content { min-width: 0; padding: 18px 26px 70px; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding-bottom: 16px; margin-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .runpick { display: none; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); flex: 1 1 auto; }
+  .chartctl { display: none; }
+  .runpick select { flex: 1 1 auto; min-width: 0; }
+  .topactions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow-1);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    transition: box-shadow var(--step) var(--ease), border-color var(--step) var(--ease),
+                transform var(--step) var(--ease), background var(--step) var(--ease);
+  }
+  .card.hoverable:hover { box-shadow: var(--shadow-2); border-color: var(--muted-dim); transform: translateY(-1px); }
+
+  .cardhead {
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .cardhead h2 {
+    margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -.01em;
+  }
+  .cardhead .sub { color: var(--muted); font-size: 12px; }
+
+  /* -- masthead ---------------------------------------------------------- */
+
+  .masthead { display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: flex-end; justify-content: space-between; }
+  /* Every child of a flex row keeps min-width:auto, so a long unbreakable line
+     would push the whole page sideways. Both blocks are allowed to shrink and
+     wrap instead — that is what keeps the top bar and the grid on screen. */
+  .masthead > * { min-width: 0; }
+  .masthead h1 {
+    margin: 0; font-size: clamp(26px, 3.4vw, 36px);
+    font-weight: 650; letter-spacing: -.025em; line-height: 1.05;
+  }
+  .masthead h1 .sep { color: var(--muted-dim); font-weight: 400; }
+  /* The space lives in the text node, so screen readers and copy-paste read
+     "BTC/USD 1d" rather than "BTC/USD1d". */
+  .masthead h1 .tf { font-size: .58em; color: var(--muted); font-weight: 500; letter-spacing: 0; margin-left: 3px; }
+  .subtitle { margin: 7px 0 0; color: var(--muted); font-size: 12.5px; }
+
+  .mast-meta { text-align: right; flex: 0 1 auto; }
+  .mast-meta .big {
+    display: block; font-size: clamp(34px, 4.6vw, 52px); font-weight: 650;
+    letter-spacing: -.035em; line-height: 1; white-space: nowrap;
+  }
+  .mast-meta .big.pos { color: var(--gain); }
+  .mast-meta .big.neg { color: var(--loss); }
+  .mast-meta .under {
+    color: var(--muted); font-size: 12.5px; margin-top: 6px;
+    display: block; max-width: 34ch; margin-left: auto; text-align: right;
+  }
+
+  /* -- verdict ----------------------------------------------------------- */
+
+  .read {
+    display: flex; gap: 12px; align-items: flex-start;
+    margin: 16px 0 0; padding: 12px 14px;
+    border-radius: var(--r-ctl);
+    background: var(--card-2);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--gain);
+    font-size: 14px;
+  }
+  .read.warn { border-left-color: var(--loss); }
+  /* Solid chips rather than tinted text: a tinted label on a tinted ground is
+     the pair that fails contrast first. */
+  .read .badge {
+    flex: none; font-size: 11px; font-weight: 700; letter-spacing: .03em;
+    padding: 3px 8px; border-radius: 5px;
+    background: var(--gain); color: var(--chip-ink);
+  }
+  .read.warn .badge { background: var(--loss); }
+
+  /* -- controls ---------------------------------------------------------- */
+
+  select, input[type="text"], input[type="number"], input[type="date"] {
+    background: var(--card-2); color: var(--text);
+    border: 1px solid var(--line); border-radius: var(--r-ctl);
+    padding: 7px 9px; font: inherit; font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    transition: border-color var(--step) var(--ease), background var(--step) var(--ease),
+                box-shadow var(--step) var(--ease);
+  }
+  select:hover, input:hover { border-color: var(--muted-dim); }
+  select:focus-visible, input:focus-visible {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+  select { min-width: 240px; max-width: 100%; }
+
+  .check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
+  .check input { accent-color: var(--accent); width: 15px; height: 15px; }
+
+  button {
+    background: var(--card-2); color: var(--text);
+    border: 1px solid var(--line); border-radius: var(--r-ctl);
+    padding: 8px 13px; font: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    transition: background var(--step) var(--ease), border-color var(--step) var(--ease),
+                color var(--step) var(--ease), transform 120ms var(--ease),
+                box-shadow var(--step) var(--ease);
+  }
+  button:hover { border-color: var(--muted-dim); background: var(--wash); }
+  button:active { transform: translateY(1px); }
+  button[disabled] { opacity: .55; cursor: progress; }
+  button.primary {
+    background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .18);
+  }
+  button.primary:hover { background: var(--accent); filter: brightness(1.07); }
+  button.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+  button.ghost:hover { background: var(--card-2); color: var(--text); }
+
+  .iconbtn { padding: 8px; display: grid; place-items: center; }
+  .iconbtn svg { width: 16px; height: 16px; display: block; }
+  [data-theme="dark"] .iconbtn .sun { display: block; }
+  [data-theme="dark"] .iconbtn .moon { display: none; }
+  [data-theme="light"] .iconbtn .sun { display: none; }
+  [data-theme="light"] .iconbtn .moon { display: block; }
+
+  /* Segmented control with a sliding pill. */
+  .segmented {
+    display: inline-flex; gap: 2px; padding: 3px;
+    background: var(--card-2); border: 1px solid var(--line); border-radius: var(--r-ctl);
+  }
+  .segmented button {
+    border: 0; background: transparent; color: var(--muted);
+    padding: 5px 12px; border-radius: 6px; font-size: 12.5px;
+  }
+  .segmented button:hover { background: transparent; color: var(--text); }
+  .segmented button[aria-pressed="true"] {
+    background: var(--strong); color: var(--strong-ink);
+    transition: background var(--step) var(--ease), color var(--step) var(--ease);
+  }
+
+  /* Scale picker in the rail: same idea, stacked. */
+  .scalepick { display: flex; flex-direction: column; gap: 3px; }
+  .scalepick button {
+    border: 0; background: transparent; color: var(--muted);
+    text-align: left; padding: 8px 10px; border-radius: var(--r-pill); font-size: 13px;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .scalepick button:hover { background: var(--card-2); color: var(--text); transform: translateX(2px); }
+  .scalepick button[aria-pressed="true"] { background: var(--strong); color: var(--strong-ink); }
+  .scalepick .dot {
+    width: 7px; height: 7px; border-radius: 50%; flex: none;
+    background: currentColor; opacity: .5;
+  }
+  .scalepick button[aria-pressed="true"] .dot { opacity: 1; }
+
+  .spacer { flex: 1 1 auto; }
+
+  /* -- run form ---------------------------------------------------------- */
+
+  .runform { margin-bottom: 16px; display: grid; gap: 16px; }
+  .formgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 11px 16px; }
+  .formgrid label { display: grid; gap: 5px; font-size: 12px; color: var(--muted); }
+  .formgrid input, .formgrid select { width: 100%; min-width: 0; }
+  .formfoot { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .hint { font-size: 12.5px; color: var(--muted-dim); }
+
+  /* -- hero chart -------------------------------------------------------- */
+
+  .chart-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 18px; flex-wrap: wrap; margin-bottom: 10px;
+  }
+  .legend { display: flex; gap: 8px; font-size: 12.5px; color: var(--muted); }
+  .legend span {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 3px 9px; border-radius: 20px; border: 1px solid var(--line);
+    transition: opacity var(--step) var(--ease), border-color var(--step) var(--ease),
+                background var(--step) var(--ease);
+  }
+  .legend span:hover { border-color: var(--muted-dim); background: var(--wash); }
+  .legend span.is-dim { opacity: .35; }
+  .legend i { width: 14px; height: 2px; border-radius: 2px; flex: none; }
+  .legend .eq i { background: var(--trace); }
+  .legend .bh i { background: var(--bench); }
+  .legend .dd i { background: var(--loss); }
+
+  /* Items wrap as whole units, so a long readout never runs off the card. */
+  .readout {
+    display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 3px 12px;
+    font-size: 12.5px; color: var(--muted); min-height: 20px; flex: 1 1 320px;
+  }
+  .readout span { white-space: nowrap; }
+  .readout b { color: var(--text); font-weight: 600; }
+
+  canvas { display: block; width: 100%; }
+  #equityCanvas { height: 320px; }
+  #ddCanvas { height: 104px; margin-top: 8px; }
+  .chartwrap { position: relative; }
+
+  .chart-foot {
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    font-size: 11.5px; color: var(--muted-dim); margin-top: 10px;
+  }
+
+  /* -- keyboard hint ----------------------------------------------------- */
+
+  .shortcuts {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 5px 16px;
+    margin: 12px 0 0; padding-top: 10px;
+    border-top: 1px solid var(--rule-soft);
+    font-size: 11.5px; color: var(--muted-dim);
+  }
+  .shortcuts .grp { display: inline-flex; align-items: center; gap: 5px; }
+  .shortcuts kbd { font-size: 10.5px; padding: 2px 4px; }
+
+  /* Says "the chart has the keyboard" without stealing focus from anything. */
+  .chartwrap.is-scrubbing {
+    border-radius: 6px;
+    outline: 1px solid var(--accent);
+    outline-offset: 7px;
+  }
+
+  /* -- spec sheet -------------------------------------------------------- */
+
+  .spec {
+    display: grid; gap: 16px; margin-bottom: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(222px, 1fr));
+  }
+  .spec .card { margin: 0; }
+  .spec h2 { margin: 0 0 10px; font-size: 13px; font-weight: 600; letter-spacing: -.005em; }
+  .spec dl { margin: 0; display: grid; grid-template-columns: 1fr auto; }
+  .spec dt, .spec dd {
+    margin: 0; padding: 6px 0; font-size: 13px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .spec dt { color: var(--muted); }
+  .spec dd { text-align: right; font-weight: 500; }
+  .spec dl > *:last-child { border-bottom: 0; }
+  .spec dd.pos { color: var(--gain); }
+  .spec dd.neg { color: var(--loss); }
+
+  /* -- monthly cells ----------------------------------------------------- */
+
+  .monthgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; }
+  .month {
+    padding: 7px 8px; font-size: 12px; border-radius: var(--r-pill);
+    background: var(--card-2); border: 1px solid var(--line);
+    transition: transform var(--step) var(--ease), border-color var(--step) var(--ease);
+  }
+  .month:hover { transform: translateY(-2px); border-color: var(--muted-dim); }
+  /* --muted, not --muted-dim: the month cell carries a tint of its own, which
+     is exactly where a dimmer label stops clearing 4.5:1. */
+  .month .k { color: var(--muted); display: block; font-size: 11px; }
+  .month .v { display: block; font-weight: 600; }
+  .month.up .v { color: var(--gain); }
+  .month.down .v { color: var(--loss); }
+
+  /* -- tables ------------------------------------------------------------ */
+
+  .loghead { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .loghead h2 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -.01em; }
+  .tabcount { color: var(--muted-dim); font-size: 12.5px; margin-left: 8px; font-weight: 400; }
+
+  .tablewrap { overflow: auto; max-height: 540px; border: 1px solid var(--line); border-radius: var(--r-ctl); }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  caption { text-align: left; color: var(--muted-dim); font-size: 12px; padding: 0 0 8px; }
+  th {
+    position: sticky; top: 0; z-index: 1;
+    text-align: left; font-weight: 600; color: var(--muted); font-size: 11.5px;
+    padding: 9px 12px 9px 0; background: var(--card); white-space: nowrap;
+    border-bottom: 1px solid var(--line);
+  }
+  th:first-child, td:first-child { padding-left: 12px; }
+  td { padding: 7px 12px 7px 0; border-bottom: 1px solid var(--rule-soft); white-space: nowrap; }
+  th.num, td.num { text-align: right; }
+  tbody tr { transition: background var(--step) var(--ease); }
+  tbody tr:hover td { background: var(--card-2); }
+
+  .edge { width: 4px; padding: 0 !important; border-bottom: 0; position: relative; }
+  .edge span {
+    position: absolute; top: 50%; left: 6px; width: 3px; border-radius: 2px;
+    transform: translateY(-50%); display: block;
+    transition: width var(--step) var(--ease);
+  }
+  tbody tr:hover .edge span { width: 5px; }
+  .side-long { color: var(--gain); }
+  .side-short { color: var(--loss); }
+  .pnl-pos { color: var(--gain); font-weight: 600; }
+  .pnl-neg { color: var(--loss); font-weight: 600; }
+  .reason { color: var(--muted); white-space: normal; }
+
+  /* -- notes + states ---------------------------------------------------- */
+
+  .notes ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
+  .notes li { margin-bottom: 6px; max-width: 84ch; }
+
+  .empty { margin-top: 22px; }
+  .empty p { color: var(--muted); margin: 0 0 14px; max-width: 76ch; }
+  .prewrap { position: relative; }
+  pre {
+    background: var(--card-2); border: 1px solid var(--line);
+    border-radius: var(--r-ctl); padding: 12px 14px; margin: 0;
+  }
+  /* The copy button floats over the corner, and a long command must wrap
+     rather than slide underneath it. */
+  .prewrap pre { padding-right: 104px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .copybtn {
+    position: absolute; top: 8px; right: 8px;
+    font-size: 11.5px; padding: 5px 9px;
+  }
+  .error { color: var(--loss); font-size: 13px; margin-top: 10px; }
+
+  /* -- guide ------------------------------------------------------------- */
+
+  dialog.guide {
+    width: min(760px, calc(100vw - 32px));
+    max-height: min(84vh, 900px);
+    padding: 0; border: 1px solid var(--line); border-radius: var(--r-sheet);
+    background: var(--card); color: var(--text);
+    box-shadow: var(--shadow-2);
+    overflow: hidden;
+  }
+  dialog.guide::backdrop { background: rgba(6, 9, 12, .55); backdrop-filter: blur(3px); }
+  [data-theme="light"] dialog.guide::backdrop { background: rgba(16, 22, 26, .32); }
+  .guide-inner { display: flex; flex-direction: column; max-height: inherit; }
+  .guide-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 20px; border-bottom: 1px solid var(--line);
+  }
+  .guide-head h2 { margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -.015em; }
+  .guide-head .x { margin-left: auto; }
+  .guide-body { padding: 18px 22px 24px; overflow-y: auto; }
+  .guide-body section { margin-bottom: 20px; }
+  .guide-body h3 {
+    margin: 0 0 6px; font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .guide-body h3::before {
+    content: ""; width: 3px; height: 13px; border-radius: 2px;
+    background: var(--accent); flex: none;
+  }
+  .guide-body p { margin: 0 0 8px; color: var(--muted); font-size: 13.5px; max-width: 72ch; }
+  .guide-body p b, .guide-body li b { color: var(--text); font-weight: 600; }
+  .guide-body ul { margin: 0 0 8px; padding-left: 18px; color: var(--muted); font-size: 13.5px; }
+  .guide-body li { margin-bottom: 5px; max-width: 72ch; }
+  kbd {
+    font-family: var(--mono); font-size: 11.5px; line-height: 1;
+    background: var(--card-2); border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 5px; padding: 3px 5px; color: var(--text);
+    white-space: nowrap;
+  }
+
+  /* Screen-reader-only announcements: the chart has no text to read out, so
+     keyboard scrubbing reports itself here instead. */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+  .guide-foot {
+    padding: 14px 20px; border-top: 1px solid var(--line);
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  /* -- custom cursor ----------------------------------------------------- */
+
+  .cur {
+    position: fixed; top: 0; left: 0; z-index: 90;
+    pointer-events: none; opacity: 0;
+    transition: opacity 200ms var(--ease);
+    will-change: transform;
+  }
+  .cur.on { opacity: 1; }
+  .cur-ring {
+    width: 30px; height: 30px; margin: -15px 0 0 -15px;
+    border: 1.5px solid var(--accent); border-radius: 50%;
+    background: transparent;
+    transition: width 180ms var(--ease), height 180ms var(--ease),
+                margin var(--step) var(--ease), background 180ms var(--ease),
+                border-color 180ms var(--ease), opacity 200ms var(--ease);
+  }
+  .cur-ring.hot {
+    width: 46px; height: 46px; margin: -23px 0 0 -23px;
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+  .cur-ring.press {
+    width: 22px; height: 22px; margin: -11px 0 0 -11px;
+    background: color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .cur-dot {
+    width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
+    border-radius: 50%; background: var(--accent);
+    transition: opacity 180ms var(--ease);
+  }
+  .cur-dot.hide { opacity: 0; }
+
+  /* -- motion ------------------------------------------------------------ */
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(12px) scale(.994); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes sheetIn {
+    from { opacity: 0; transform: translateY(14px) scale(.98); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* fill-mode `backwards`, never `both`: `forwards` would keep the final
+       keyframe (transform: none) applied forever, and an animated transform
+       outranks a normal declaration — which silently kills the hover lift. */
+    .card.revealing { animation: cardIn .55s var(--ease) backwards; animation-delay: var(--d, 0ms); }
+    dialog.guide[open] { animation: sheetIn .26s var(--ease) both; }
+    .read { animation: cardIn .4s var(--ease) backwards; animation-delay: 60ms; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .001ms !important;
+    }
+    .cur { display: none !important; }
+  }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .rail { display: none; }
+    .runpick { display: flex; flex: 1 1 100%; }
+    .topbar { flex-wrap: wrap; gap: 10px; }
+    .topactions { margin-left: auto; }
+    select { min-width: 0; }
+    .chartctl { display: block; }
+    .content { padding: 14px 14px 60px; }
+    .mast-meta { text-align: left; }
+    .mast-meta .under { margin-left: 0; text-align: left; }
+    .card { padding: 16px 15px; }
+    .readout { justify-content: flex-start; }
+    #equityCanvas { height: 250px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <aside class="rail">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 16.5l4-5 3.5 3.5L20 6.5"></path>
+        </svg>
+      </span>
+      <span class="brand-name">Recorder<span>backtest reader</span></span>
+    </div>
+
+    <nav class="railgroup" aria-label="Saved runs">
+      <p class="railh">Runs <span class="chip" id="runCount">0</span></p>
+      <div class="runlist" id="runList"></div>
+    </nav>
+
+    <div class="railgroup">
+      <p class="railh">Vertical scale</p>
+      <div class="scalepick" role="group" aria-label="Vertical scale">
+        <button type="button" data-scale="both" aria-pressed="true"><span class="dot"></span>Both series</button>
+        <button type="button" data-scale="strategy" aria-pressed="false"><span class="dot"></span>Strategy only</button>
+        <button type="button" data-scale="log" aria-pressed="false"><span class="dot"></span>Logarithmic</button>
+      </div>
+    </div>
+
+    <div class="railfoot">
+      <button type="button" class="ghost" id="openGuideAlt">How to read this</button>
+      <span class="ver">v0.1.0 · loopback only</span>
+    </div>
+  </aside>
+
+  <div class="content">
+
+    <div class="topbar">
+      <label class="runpick">Run
+        <select id="runPicker" aria-label="Select a saved run"></select>
+      </label>
+      <div class="topactions">
+        <button type="button" id="openGuide" class="ghost">Guide</button>
+        <button type="button" id="themeToggle" class="iconbtn" aria-pressed="false"
+                aria-label="Switch between light and dark theme" title="Switch theme">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+          </svg>
+          <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"></path>
+          </svg>
+        </button>
+        <button id="toggleForm" class="primary" aria-expanded="false">New run</button>
+      </div>
+    </div>
+
+    <form class="runform card" id="runForm" hidden data-reveal>
+      <div class="cardhead"><h2>Run a backtest</h2>
+        <span class="sub">Everything is cached after the first fetch.</span></div>
+      <div class="formgrid">
+        <label>Symbol <input type="text" name="symbol" value="BTC/USDT" required></label>
+        <label>Timeframe
+          <select name="timeframe">
+            <option>1d</option><option>4h</option><option>1h</option><option>15m</option><option>5m</option><option>1m</option><option>1w</option>
+          </select>
+        </label>
+        <label>Start <input type="date" name="start"></label>
+        <label>Provider
+          <select name="provider"><option>auto</option><option>binance</option><option>okx</option><option>kraken</option><option>coinbase</option></select>
+        </label>
+        <label>Fast EMA <input type="number" name="fast" value="20" min="2" max="400" step="1"></label>
+        <label>Slow EMA <input type="number" name="slow" value="50" min="3" max="600" step="1"></label>
+        <label>ATR stop ×<input type="number" name="atr_stop_mult" value="2.5" min="0.1" max="20" step="0.1"></label>
+        <label>Trail ×<input type="number" name="trail_mult" value="3" min="0.1" max="20" step="0.1"></label>
+        <label>Start equity <input type="number" name="cash" value="10000" min="100" step="100"></label>
+        <label>Risk / trade <input type="number" name="risk" value="0.02" min="0.001" max="0.5" step="0.005"></label>
+        <label>Fee bps <input type="number" name="fee_bps" value="10" min="0" max="100" step="1"></label>
+        <label>Slippage bps <input type="number" name="slippage_bps" value="5" min="0" max="200" step="1"></label>
+      </div>
+      <div class="formfoot">
+        <label class="check"><input type="checkbox" name="allow_short"> allow shorts</label>
+        <label class="check"><input type="checkbox" name="no_trend_filter"> skip slow-EMA filter</label>
+        <button type="submit" class="primary" id="runButton">Run backtest</button>
+        <span class="hint" id="formHint" role="status" aria-live="polite">Data is cached after the first fetch, so repeat runs are quick.</span>
+      </div>
+    </form>
+
+    <div class="card masthead-card" data-reveal>
+      <header class="masthead">
+        <div>
+          <h1 id="title">Loading…</h1>
+          <p class="subtitle" id="subtitle"></p>
+        </div>
+        <div class="mast-meta" id="mastMeta"></div>
+      </header>
+      <p class="read" id="read" hidden><span class="badge" id="readBadge">VERDICT</span><span id="readText"></span></p>
+    </div>
+
+    <div class="card empty" id="empty" hidden data-reveal>
+      <div class="cardhead"><h2>No runs saved yet</h2></div>
+      <p>Every run you make lands in <code>results/</code> as a JSON file, and this page reads them all. Start one from the form above, or from a terminal:</p>
+      <div class="prewrap">
+        <pre id="emptyCmd">python run_backtest.py --symbol BTC/USDT --timeframe 1d --start 2021-01-01</pre>
+        <button type="button" class="copybtn ghost" id="copyCmd" data-hot>Copy</button>
+      </div>
+    </div>
+
+    <main id="main">
+      <section class="card hoverable" data-reveal>
+        <div class="chart-head">
+          <div class="legend">
+            <span class="eq"><i></i>Strategy</span>
+            <span class="bh" id="legendBh"><i></i>Buy &amp; hold</span>
+            <span class="dd"><i></i>Drawdown</span>
+          </div>
+          <!-- The rail is hidden on a narrow window, so the scale control has to
+               exist here too. Both groups drive the same state. -->
+          <div class="chartctl">
+            <div class="segmented" role="group" aria-label="Vertical scale">
+              <button type="button" data-scale="both" aria-pressed="true">Both</button>
+              <button type="button" data-scale="strategy" aria-pressed="false">Strategy</button>
+              <button type="button" data-scale="log" aria-pressed="false">Log</button>
+            </div>
+          </div>
+          <div class="readout" id="readout">Hover the chart to read any bar.</div>
+        </div>
+        <div class="chartwrap">
+          <canvas id="equityCanvas" role="img" aria-describedby="shortcuts"
+                  aria-label="Strategy equity versus buy and hold over time"></canvas>
+          <canvas id="ddCanvas" role="img" aria-label="Underwater drawdown curve"></canvas>
+        </div>
+        <div class="chart-foot">
+          <span id="rangeFoot"></span>
+          <span id="scaleFoot"></span>
+        </div>
+        <p class="shortcuts" id="shortcuts">
+          <span class="grp"><kbd>←</kbd><kbd>→</kbd>scrub bars</span>
+          <span class="grp"><kbd>Shift</kbd>+<kbd>←</kbd><kbd>→</kbd>a twentieth at a time</span>
+          <span class="grp"><kbd>j</kbd><kbd>k</kbd>previous / next run</span>
+          <span class="grp"><kbd>Esc</kbd>clear</span>
+          <span class="grp"><kbd>y</kbd>copy bar</span>
+          <span class="grp"><kbd>?</kbd>guide</span>
+        </p>
+      </section>
+
+      <section class="spec" id="spec"></section>
+
+      <section class="card months" id="months" hidden data-reveal>
+        <div class="cardhead"><h2 id="monthsTitle">Monthly returns</h2></div>
+        <div class="monthgrid" id="monthGrid"></div>
+      </section>
+
+      <section class="card log" data-reveal>
+        <div class="loghead">
+          <h2 id="tableTitle">Trades<span class="tabcount" id="tableCount"></span></h2>
+          <div class="segmented" role="group" aria-label="Choose table">
+            <button type="button" id="tabTrades" aria-pressed="true">Round trips</button>
+            <button type="button" id="tabFills" aria-pressed="false">Fills</button>
+          </div>
+        </div>
+        <div class="tablewrap" id="tableWrap"></div>
+      </section>
+
+      <section class="card notes" id="notes" hidden data-reveal>
+        <div class="cardhead"><h2>What this backtest does not model</h2></div>
+        <ul id="noteList"></ul>
+      </section>
+    </main>
+  </div>
+</div>
+
+<dialog class="guide" id="guide" aria-labelledby="guideTitle">
+  <div class="guide-inner">
+    <div class="guide-head">
+      <h2 id="guideTitle">How to read this</h2>
+      <button type="button" class="ghost x" id="guideClose">Close</button>
+    </div>
+    <div class="guide-body">
+
+      <section>
+        <h3>One run at a time</h3>
+        <p>Every backtest you save becomes a JSON file in <code>results/</code>, and this page lists them newest
+        first. Pick one from the run list on the left — or from the <b>Run</b> dropdown on a narrow window — and
+        the whole page below re-reads it. Nothing here re-runs a backtest; it reads what was already saved.</p>
+      </section>
+
+      <section>
+        <h3>The equity curve</h3>
+        <p>The solid amber line is the strategy. The dashed line is <b>buy &amp; hold</b> — the same money left in
+        the asset for the same window, with no fees. The band underneath is the <b>drawdown</b>: how far below its
+        own peak the account sat at each moment. If the amber line never beats the dashed one, the strategy made
+        money, and less of it than doing nothing would have.</p>
+        <p>Hover anywhere on the curve and the bar's date, close, both equity values and the drawdown appear above
+        the chart. Move off it and the readout returns to the final bar.</p>
+      </section>
+
+      <section>
+        <h3>Three vertical scales, and why</h3>
+        <ul>
+          <li><b>Both series</b> fits the strategy and buy &amp; hold on one axis. Honest, but a curve trailing
+          buy &amp; hold ten-fold gets flattened into a straight line.</li>
+          <li><b>Strategy only</b> fits the axis to the strategy alone, so its own shape is legible. When buy &amp;
+          hold runs off the top it is left undrawn, and the footer says so.</li>          <li><b>Logarithmic</b> gives equal room to equal percentage moves, which is the fair way to
+          compare a curve that grew 10× against one that grew 44×.</li>
+        </ul>
+        <p>The control sits in the rail on a wide window and above the chart on a narrow one.</p>
+        <p>The footer under the chart always names the scale in use. A scale change is never silent.</p>
+      </section>
+
+      <section>
+        <h3>The verdict line</h3>
+        <p>Above the chart, one sentence judges the run against a fixed rulebook: fewer than 20 trades, a drawdown
+        deeper than 50%, a profit factor under 1.2, fees eating the return, or failing to beat buy &amp; hold.
+        If it starts with <b>Read with care</b>, at least one of those fired. If it does not, that means there were
+        no red flags <i>in this window</i> — which is not the same as an edge. Several windows and markets is what
+        <code>run_robustness.py</code> is for.</p>
+      </section>
+
+      <section>
+        <h3>The spec sheet</h3>
+        <p>Four groups of numbers: <b>Returns</b> (total, CAGR, buy &amp; hold, excess, final equity, window length),
+        <b>Risk</b> (max drawdown, longest time underwater, volatility, Sharpe, Sortino, Calmar, time in market),
+        <b>Trades</b> (count, win rate, profit factor, expectancy, best and worst, average hold in bars and in R
+        multiples) and <b>Costs</b> (fees paid, fees as a share of starting equity, turnover, round-trip friction).</p>
+        <p>Green and red are direction, never magnitude. Read the number.</p>
+      </section>
+
+      <section>
+        <h3>Reading the trade log</h3>
+        <p><b>Round trips</b> are completed positions: entry, exit, size, the price it went in and out at, net PnL
+        after fees and slippage, the result in R multiples, how far it ran for and against you (MFE / MAE), and why
+        it closed. <b>Fills</b> are the raw orders, including stops that ratcheted. A trade with a huge return and
+        two bars held is noise, not a finding — check the count before believing the average.</p>
+      </section>
+
+      <section>
+        <h3>Running a new backtest</h3>
+        <p><b>New run</b> opens a form pre-filled from the run you are looking at. Change the symbol, timeframe or
+        strategy settings and press <b>Run backtest</b>. Shorts assume 100% margin with no funding cost; the
+        slippage box is the assumption most likely to flatter a result, so do not set it to zero unless you are
+        only testing signal quality. Long histories need a first fetch, which is the slow part; after that the
+        candles are cached on disk and repeat runs finish in about a second.</p>
+      </section>
+
+      <section>
+        <h3>Reading a curve with the keyboard</h3>
+        <p>A mouse is not required. The list under the chart repeats these, and none of them fire while you are
+        typing in a field:</p>
+        <ul>
+          <li><kbd>←</kbd> <kbd>→</kbd> step one bar at a time. The readout above the chart follows, and the
+          crosshair marks the bar you are on.</li>
+          <li><kbd>Shift</kbd> with either arrow jumps a twentieth of the whole series, which is how you cross a
+          decade of daily bars without holding a key down.</li>
+          <li><kbd>j</kbd> and <kbd>k</kbd> move to the next and previous saved run, so you can flip through a
+          folder of results without touching the list.</li>
+          <li><kbd>Esc</kbd> clears the marker and puts the readout back on the final bar.</li>
+          <li><kbd>?</kbd> opens this guide, and <kbd>Esc</kbd> closes it.</li>
+          <li><kbd>y</kbd> copies the bar you scrubbed to — date, close, strategy equity and drawdown — so you can paste it anywhere.</li>
+        </ul>
+        <p>While the chart has the keyboard it draws an amber outline around itself, so you can tell scrubbing
+        apart from a stray keypress.</p>
+      </section>
+
+      <section>
+        <h3>Theme</h3>
+        <p>The toggle in the top bar switches light and dark and remembers your choice; with nothing stored, it
+        follows your operating system. Animation and the pointer ring switch themselves off when your system
+        asks for reduced motion.</p>
+      </section>
+
+    </div>
+    <div class="guide-foot">
+      <button type="button" class="primary" id="guideDone">Got it</button>
+      <span class="hint">Full notes live in README.md.</span>
+    </div>
+  </div>
+</dialog>
+
+<div class="cur cur-ring" id="curRing" aria-hidden="true"></div>
+<div class="cur cur-dot" id="curDot" aria-hidden="true"></div>
+<p class="sr-only" id="srStatus" role="status" aria-live="polite"></p>
+
+<script>
+"use strict";
+
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+const state = {
+  runs: [],
+  runId: null,
+  data: null,
+  scale: "both",
+  table: "trades",
+  hover: null,
+  reveal: 1,      // 0..1 trace draw-in progress
+  traceRaf: null,
+};
+
+const $ = (id) => document.getElementById(id);
+
+/* ------------------------------------------------------------------ theme */
+
+const themeToggle = $("themeToggle");
+
+function currentTheme() { return document.documentElement.dataset.theme || "dark"; }
+
+function applyTheme(theme, remember) {
+  document.documentElement.dataset.theme = theme;
+  themeToggle.setAttribute("aria-pressed", String(theme === "light"));
+  if (remember) {
+    try { localStorage.setItem("recorder-theme", theme); } catch (e) { /* private mode */ }
+  }
+  if (state.data) draw();   // canvas colours are baked in at draw time
+}
+
+themeToggle.addEventListener("click", () => {
+  applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
+});
+
+// Follow the operating system until the reader makes an explicit choice.
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+  let stored = null;
+  try { stored = localStorage.getItem("recorder-theme"); } catch (err) { /* ignore */ }
+  if (!stored) applyTheme(e.matches ? "dark" : "light", false);
+});
+
+themeToggle.setAttribute("aria-pressed", String(currentTheme() === "light"));
+
+/* ------------------------------------------------------------------ format */
+
+const fmt = {
+  money(v, dp = 2) {
+    if (!isFinite(v)) return "–";
+    return v.toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  },
+  signedPct(v, dp = 2) {
+    if (!isFinite(v)) return "–";
+    return (v >= 0 ? "+" : "") + v.toFixed(dp) + "%";
+  },
+  ratio(v) {
+    if (v === Infinity || v === "Infinity") return "∞";
+    if (!isFinite(v)) return "–";
+    return v.toFixed(2);
+  },
+  num(v, dp = 0) { return isFinite(v) ? v.toFixed(dp) : "–"; },
+  date(ms) { return new Date(ms).toISOString().slice(0, 10); },
+  dateTime(ms) { return new Date(ms).toISOString().slice(0, 16).replace("T", " ") + " UTC"; },
+  sign(v) { return v > 0 ? "pos" : v < 0 ? "neg" : ""; },
+};
+
+/* ------------------------------------------------------------------- chart */
+
+const PAD = { top: 14, right: 58, bottom: 22, left: 4 };
+
+function css(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function fitCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.max(rect.width, 10);
+  const h = Math.max(rect.height, 10);
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
+
+function niceTicks(min, max, target = 4) {
+  if (!isFinite(min) || !isFinite(max) || min === max) return [min];
+  const span = max - min;
+  const raw = span / target;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const norm = raw / mag;
+  const step = (norm >= 5 ? 10 : norm >= 2 ? 5 : norm >= 1 ? 2 : 1) * mag;
+  const out = [];
+  for (let v = Math.ceil(min / step) * step; v <= max + step * 0.001; v += step) out.push(v);
+  return out;
+}
+
+const SCALE_LABELS = {
+  both: "vertical scale: linear, both series",
+  strategy: "vertical scale: linear, strategy only",
+  log: "vertical scale: logarithmic, both series",
+};
+
+function scales(series, w, h) {
+  const pad = PAD;
+  const n = series.equity.length;
+  const xs = (i) => pad.left + (n <= 1 ? 0 : (i / (n - 1)) * (w - pad.left - pad.right));
+
+  const useLog = state.scale === "log";
+  const toTick = (v) => (useLog ? Math.log10(Math.max(v, 1e-9)) : v);
+  const toValue = (t) => (useLog ? Math.pow(10, t) : t);
+
+  // "strategy" fits the domain to the equity curve alone, so a strategy that
+  // trails buy & hold is still legible. The mode is labelled, never silent.
+  const pool = state.scale === "strategy" ? series.equity : series.equity.concat(series.benchmark);
+  const values = pool.filter((v) => isFinite(v) && v > 0);
+  let lo = toTick(Math.min(...values));
+  let hi = toTick(Math.max(...values));
+  const room = (hi - lo) * 0.06 || Math.abs(hi) * 0.02 || 1;
+  lo -= room; hi += room;
+
+  const ys = (v) => pad.top + (1 - (toTick(v) - lo) / (hi - lo || 1)) * (h - pad.top - pad.bottom);
+  const yTick = (t) => pad.top + (1 - (t - lo) / (hi - lo || 1)) * (h - pad.top - pad.bottom);
+  return { xs, ys, yTick, lo, hi, toValue, n };
+}
+
+function drawEquity() {
+  const canvas = $("equityCanvas");
+  const series = state.data?.series;
+  if (!series) return;
+  const { ctx, w, h } = fitCanvas(canvas);
+  ctx.clearRect(0, 0, w, h);
+
+  const sc = scales(series, w, h);
+  const { xs, ys, n } = sc;
+  const plotBottom = h - PAD.bottom;
+  const rule = css("--rule-soft");
+  const mutedDim = css("--muted-dim");
+
+  // Right-hand value scale, chart-recorder style.
+  ctx.font = "11px " + css("--sans");
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  for (const t of niceTicks(sc.lo, sc.hi, 4)) {
+    const y = sc.yTick(t);
+    ctx.strokeStyle = rule;
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, y + 0.5);
+    ctx.lineTo(w - PAD.right + 4, y + 0.5);
+    ctx.stroke();
+    ctx.fillStyle = mutedDim;
+    ctx.fillText(fmt.money(sc.toValue(t), 0), w - PAD.right + 8, y);
+  }
+
+  // Starting equity baseline.
+  const base = state.data.metrics.start_equity;
+  if (isFinite(base) && base > 0) {
+    const y = ys(base);
+    ctx.save();
+    ctx.setLineDash([2, 4]);
+    ctx.strokeStyle = css("--muted-dim");
+    ctx.globalAlpha = 0.55;
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, y + 0.5);
+    ctx.lineTo(w - PAD.right + 4, y + 0.5);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  const line = (arr, color, width, dash) => {
+    ctx.save();
+    ctx.setLineDash(dash || []);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const x = xs(i), y = ys(arr[i]);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  // Clip the traces to the plot area: in "strategy" scale the benchmark runs
+  // off the top, and it should leave the frame clean, not scribble over it.
+  // The same clip sweeps left-to-right while the curve draws itself in.
+  const frameW = w - PAD.left - PAD.right + 10;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(PAD.left, PAD.top - 8, frameW * state.reveal, plotBottom - PAD.top + 8);
+  ctx.clip();
+  // In strategy-only scale the benchmark is entirely off-frame, so drawing its
+  // clipped dashes would just add noise. The footer says where it went.
+  if (state.scale !== "strategy") line(series.benchmark, css("--bench"), 1.2, [5, 4]);
+  line(series.equity, css("--trace"), 1.8);
+  ctx.restore();
+
+  // Time axis. First and last labels hug the frame instead of being cut in half.
+  ctx.textBaseline = "top";
+  ctx.fillStyle = mutedDim;
+  const ticksX = 6;
+  for (let k = 0; k < ticksX; k++) {
+    const i = Math.round((k / (ticksX - 1)) * (n - 1));
+    ctx.textAlign = k === 0 ? "left" : k === ticksX - 1 ? "right" : "center";
+    ctx.fillText(fmt.date(series.ts[i]), xs(i), h - PAD.bottom + 6);
+  }
+
+  // Crosshair.
+  if (state.hover != null && state.hover < n) {
+    const x = xs(state.hover);
+    ctx.strokeStyle = css("--muted");
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, PAD.top);
+    ctx.lineTo(x + 0.5, h - PAD.bottom);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    for (const [arr, color] of [[series.equity, css("--trace")], [series.benchmark, css("--bench")]]) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, ys(arr[state.hover]), 3.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function drawDrawdown() {
+  const canvas = $("ddCanvas");
+  const series = state.data?.series;
+  if (!series) return;
+  const { ctx, w, h } = fitCanvas(canvas);
+  ctx.clearRect(0, 0, w, h);
+
+  const dd = series.drawdown_pct;
+  const n = dd.length;
+  const min = Math.min(...dd, -0.01);
+  const xs = (i) => PAD.left + (i / (n - 1 || 1)) * (w - PAD.left - PAD.right);
+  const ys = (v) => PAD.top + (v / min) * (h - PAD.top - PAD.bottom);
+
+  ctx.strokeStyle = css("--rule-soft");
+  ctx.beginPath();
+  ctx.moveTo(PAD.left, PAD.top + 0.5);
+  ctx.lineTo(w - PAD.right + 4, PAD.top + 0.5);
+  ctx.stroke();
+
+  const loss = css("--loss");
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(PAD.left, PAD.top - 8, (w - PAD.left - PAD.right + 10) * state.reveal, h);
+  ctx.clip();
+  ctx.beginPath();
+  ctx.moveTo(xs(0), PAD.top);
+  for (let i = 0; i < n; i++) ctx.lineTo(xs(i), ys(dd[i]));
+  ctx.lineTo(xs(n - 1), PAD.top);
+  ctx.closePath();
+  ctx.fillStyle = loss;
+  ctx.globalAlpha = 0.26;
+  ctx.fill();
+  ctx.globalAlpha = 0.85;
+  ctx.strokeStyle = loss;
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) (i === 0 ? ctx.moveTo : ctx.lineTo).call(ctx, xs(i), ys(dd[i]));
+  ctx.stroke();
+  ctx.restore();
+  ctx.globalAlpha = 1;
+
+  ctx.font = "11px " + css("--sans");
+  ctx.fillStyle = css("--muted-dim");
+  ctx.textAlign = "left";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("0%", PAD.left + 2, PAD.top - 2);
+  ctx.textBaseline = "top";
+  ctx.fillText(fmt.num(min, 1) + "%", PAD.left + 2, h - PAD.bottom + 2);
+
+  if (state.hover != null && state.hover < n) {
+    const x = xs(state.hover);
+    ctx.strokeStyle = css("--muted");
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, PAD.top); ctx.lineTo(x + 0.5, h - PAD.bottom); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+}
+
+function draw() {
+  drawEquity();
+  drawDrawdown();
+}
+
+/* The curve is recorded, not conjured: it draws itself in once per run. */
+function animateTrace() {
+  cancelAnimationFrame(state.traceRaf);
+  if (reduceMotion.matches || !state.data) { state.reveal = 1; draw(); return; }
+  const started = performance.now();
+  const duration = 640;
+  const step = (now) => {
+    const t = Math.min(1, (now - started) / duration);
+    state.reveal = 1 - Math.pow(1 - t, 3);
+    draw();
+    if (t < 1) state.traceRaf = requestAnimationFrame(step);
+  };
+  state.reveal = 0;
+  state.traceRaf = requestAnimationFrame(step);
+}
+
+/* ----------------------------------------------------------------- cursor */
+
+/* A dot that tracks the pointer and a ring that trails it. Purely additive:
+   the real cursor is never hidden, and the whole thing stands down when the
+   system asks for reduced motion or the pointer is a finger. */
+function initCursor() {
+  const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  if (!fine || reduceMotion.matches) return;
+
+  const ring = $("curRing");
+  const dot = $("curDot");
+  let tx = 0, ty = 0, rx = 0, ry = 0, running = false;
+
+  const tick = () => {
+    rx += (tx - rx) * 0.18;
+    ry += (ty - ry) * 0.18;
+    dot.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
+    ring.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
+    if (Math.abs(tx - rx) > 0.3 || Math.abs(ty - ry) > 0.3) {
+      requestAnimationFrame(tick);
+    } else {
+      running = false;
+    }
+  };
+
+  window.addEventListener("pointermove", (e) => {
+    tx = e.clientX; ty = e.clientY;
+    ring.classList.add("on");
+    dot.classList.add("on");
+    // A synthetic or window-targeted event has no closest(); treat it as cold.
+    const el = e.target instanceof Element ? e.target : null;
+    const hot = el?.closest(
+      "button, a, select, input, label.check, .runitem, .month, tbody tr, [data-hot]"
+    );
+    ring.classList.toggle("hot", Boolean(hot));
+    // Over the chart the crosshair is the instrument; the ring would only fight it.
+    const overChart = el === $("equityCanvas");
+    dot.classList.toggle("hide", overChart);
+    ring.classList.toggle("press", false);
+    if (!running) { running = true; requestAnimationFrame(tick); }
+  }, { passive: true });
+
+  window.addEventListener("pointerdown", () => ring.classList.add("press"));
+  window.addEventListener("pointerup", () => ring.classList.remove("press"));
+  document.addEventListener("pointerleave", () => {
+    ring.classList.remove("on");
+    dot.classList.remove("on");
+  });
+}
+
+/* ---------------------------------------------------------------- readout */
+
+function updateReadout() {
+  const el = $("readout");
+  const series = state.data?.series;
+  if (!series) { el.textContent = ""; return; }
+  const i = state.hover == null ? series.equity.length - 1 : state.hover;
+  const eq = series.equity[i], bh = series.benchmark[i], dd = series.drawdown_pct[i];
+  const base = state.data.metrics.start_equity || eq;
+  const parts = [
+    [fmt.date(series.ts[i]), ""],
+    ["close", fmt.money(series.close[i], 2)],
+    ["strategy", `${fmt.money(eq, 2)} (${fmt.signedPct((eq / base - 1) * 100)})`],
+    ["buy & hold", fmt.money(bh, 2)],
+    ["drawdown", fmt.num(dd, 2) + "%"],
+  ];
+  el.textContent = "";
+  for (const [label, value] of parts) {
+    const span = document.createElement("span");
+    if (!value) {
+      span.textContent = label;
+    } else {
+      span.append(document.createTextNode(label + " "));
+      const b = document.createElement("b");
+      b.textContent = value;
+      span.append(b);
+    }
+    el.append(span);
+  }
+}
+
+function markHover(clientX) {
+  const canvas = $("equityCanvas");
+  const rect = canvas.getBoundingClientRect();
+  const series = state.data?.series;
+  if (!series) return;
+  const n = series.equity.length;
+  const t = (clientX - rect.left - PAD.left) / (rect.width - PAD.left - PAD.right);
+  const i = Math.max(0, Math.min(n - 1, Math.round(t * (n - 1))));
+  setScrubbing(false);   // the pointer takes over from the keyboard
+  state.hover = i;
+  draw();
+  updateReadout();
+}
+
+/* --------------------------------------------------------------- keyboard */
+
+let scrubbing = false;
+
+function setScrubbing(on) {
+  if (scrubbing === on) return;
+  scrubbing = on;
+  const wrap = document.querySelector(".chartwrap");
+  if (wrap) wrap.classList.toggle("is-scrubbing", on);
+}
+
+function announce(text) {
+  const el = $("srStatus");
+  if (el) el.textContent = text;
+}
+
+function setHoverIndex(i) {
+  const series = state.data?.series;
+  if (!series) return;
+  // Scrubbing should show the finished curve, not one still drawing itself in.
+  if (state.reveal < 1) { cancelAnimationFrame(state.traceRaf); state.reveal = 1; }
+  state.hover = Math.max(0, Math.min(series.equity.length - 1, i));
+  draw();
+  updateReadout();
+}
+
+/* ``speak`` is false while a key is auto-repeating: the readout still moves, but
+   a held arrow must not machine-gun the live region. */
+function scrub(delta, speak = true) {
+  const series = state.data?.series;
+  if (!series) return false;
+  const n = series.equity.length;
+  const from = state.hover == null ? n - 1 : state.hover;
+  const target = from + delta;
+  setScrubbing(true);
+  setHoverIndex(target);
+  if (!speak) return true;
+  const i = state.hover;
+  if (target !== i) {
+    announce(i === 0 ? "Start of series." : "End of series.");
+  } else {
+    announce(
+      `${fmt.date(series.ts[i])}, bar ${i + 1} of ${n}. close ${fmt.money(series.close[i], 2)}, ` +
+      `strategy ${fmt.money(series.equity[i], 2)}, drawdown ${fmt.num(series.drawdown_pct[i], 2)} percent.`
+    );
+  }
+  return true;
+}
+
+function clearScrub() {
+  if (!scrubbing && state.hover == null) return;
+  setScrubbing(false);
+  state.hover = null;
+  draw();
+  updateReadout();
+  announce("Marker cleared.");
+}
+
+function stepRun(direction) {
+  const runs = state.runs;
+  if (!runs.length) return false;
+  const at = runs.findIndex((r) => r.run_id === state.runId);
+  const next = Math.max(0, Math.min(runs.length - 1, at + direction));
+  if (next === at) {
+    announce(direction > 0 ? "Oldest run." : "Newest run.");
+    return true;
+  }
+  setScrubbing(false);
+  loadRun(runs[next].run_id).catch(showError);
+  return true;
+}
+
+/* -------------------------------------------------------------- rendering */
+
+/* One orchestrated entrance: the cards settle in reading order, once per run. */
+function replayReveal() {
+  const cards = document.querySelectorAll("[data-reveal]");
+  cards.forEach((el, i) => {
+    el.classList.remove("revealing");
+    el.style.setProperty("--d", (i * 45) + "ms");
+  });
+  void document.body.offsetWidth;   // flush, so the animation restarts
+  cards.forEach((el) => el.classList.add("revealing"));
+}
+
+function renderTitle(symbol, timeframe) {
+  // Built from nodes, never innerHTML: symbols come from files on disk.
+  const host = $("title");
+  host.textContent = "";
+  const [base, quote] = String(symbol).split("/");
+  host.append(document.createTextNode(base));
+  if (quote) {
+    const sep = document.createElement("span");
+    sep.className = "sep";
+    sep.textContent = "/";
+    host.append(sep, document.createTextNode(quote));
+  }
+  if (timeframe) {
+    const tf = document.createElement("span");
+    tf.className = "tf";
+    tf.textContent = " " + timeframe;
+    host.append(tf);
+  }
+}
+
+function renderScaleFoot() {
+  let text = SCALE_LABELS[state.scale];
+  let benchHidden = false;
+  if (state.scale === "strategy" && state.data) {
+    const peakBench = Math.max(...state.data.series.benchmark);
+    const top = Math.max(...state.data.series.equity) * 1.06;
+    benchHidden = peakBench > top;
+    if (benchHidden) text += " · buy & hold is off the top and not drawn";
+  }
+  $("legendBh").classList.toggle("is-dim", benchHidden);
+  $("scaleFoot").textContent = text;
+}
+
+function setThemeOnMeta(ret) {
+  const host = $("mastMeta");
+  host.innerHTML = "";
+  const big = document.createElement("span");
+  big.className = "big " + fmt.sign(ret);
+  const under = document.createElement("span");
+  under.className = "under";
+  host.append(big, under);
+  return { big, under };
+}
+
+let headlineAnim = null;
+let headlineValue = 0;   // so switching runs moves the needle from the last figure
+
+function renderHeader() {
+  const d = state.data;
+  if (!d) return;
+  const data = d.data, m = d.metrics, cfg = d.config;
+
+  renderTitle(data.symbol, data.timeframe);
+  $("subtitle").textContent =
+    `${d.strategy.name} · ${data.bars} bars · ${data.start} → ${data.end} · ${data.provider} · run ${d.run_id}`;
+
+  const ret = m.total_return_pct;
+  const { big, under } = setThemeOnMeta(ret);
+  under.textContent =
+    `${fmt.money(m.final_equity, 2)} from ${fmt.money(m.start_equity, 2)} · ` +
+    `buy & hold ${fmt.signedPct(m.buy_hold_return_pct ?? 0)}`;
+
+  // The headline figure is the one number worth watching settle: it sweeps to
+  // its value rather than appearing, then stays exactly right.
+  cancelAnimationFrame(headlineAnim);
+  const from = headlineValue;
+  headlineValue = isFinite(ret) ? ret : 0;
+  if (reduceMotion.matches || !isFinite(ret)) {
+    big.textContent = fmt.signedPct(ret);
+  } else {
+    const started = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, (now - started) / 520);
+      const eased = 1 - Math.pow(1 - t, 3);
+      big.textContent = fmt.signedPct(from + (ret - from) * eased);
+      if (t < 1) headlineAnim = requestAnimationFrame(step);
+      else big.textContent = fmt.signedPct(ret);
+    };
+    headlineAnim = requestAnimationFrame(step);
+  }
+
+  $("rangeFoot").textContent =
+    `Fees ${cfg.costs.fee_bps} bps + slippage ${cfg.costs.slippage_bps} bps per side ` +
+    `(${cfg.costs.round_trip_bps} bps round trip) · risk ${(cfg.risk.risk_per_trade * 100).toFixed(2)}% per trade`;
+  renderScaleFoot();
+
+  const read = state.runId ? (state.runs.find((r) => r.run_id === state.runId)?.read || "") : "";
+  $("readText").textContent = read;
+  const warn = read.startsWith("Read with care");
+  $("read").className = "read" + (warn ? " warn" : "");
+  $("readBadge").textContent = warn ? "READ WITH CARE" : "VERDICT";
+  $("read").hidden = !read;
+}
+
+
+function specRow(dl, label, value, cls) {
+  const dt = document.createElement("dt");
+  dt.textContent = label;
+  const dd = document.createElement("dd");
+  dd.textContent = value;
+  if (cls) dd.className = cls;
+  dl.append(dt, dd);
+}
+
+function renderSpec() {
+  const m = state.data.metrics;
+  const host = $("spec");
+  host.textContent = "";
+  const groups = [
+    ["Returns", [
+      ["Total return", fmt.signedPct(m.total_return_pct), fmt.sign(m.total_return_pct)],
+      ["CAGR", fmt.signedPct(m.cagr_pct), fmt.sign(m.cagr_pct)],
+      ["Buy & hold", fmt.signedPct(m.buy_hold_return_pct ?? 0), fmt.sign(m.buy_hold_return_pct)],
+      ["Excess vs holding", fmt.signedPct(m.excess_return_pct ?? 0), fmt.sign(m.excess_return_pct)],
+      ["Final equity", fmt.money(m.final_equity)],
+      ["Window", fmt.num(m.years, 2) + " years"],
+    ]],
+    ["Risk", [
+      ["Max drawdown", fmt.num(m.max_drawdown_pct, 2) + "%", "neg"],
+      ["Longest underwater", fmt.num(m.max_drawdown_bars, 0) + " bars"],
+      ["Time below a peak", fmt.num(m.days_in_drawdown_pct, 1) + "%"],
+      ["Annual volatility", fmt.num(m.annual_vol * 100, 2) + "%"],
+      ["Sharpe / Sortino", fmt.ratio(m.sharpe) + " / " + fmt.ratio(m.sortino)],
+      ["Calmar", fmt.ratio(m.calmar)],
+      ["Time in market", fmt.num(m.bars_in_market_pct, 1) + "%"],
+    ]],
+    ["Trades", [
+      ["Closed trades", fmt.num(m.trades, 0)],
+      ["Win rate", fmt.num(m.win_rate_pct, 1) + "%"],
+      ["Profit factor", fmt.ratio(m.profit_factor)],
+      ["Expectancy", fmt.money(m.expectancy) + " / trade", fmt.sign(m.expectancy)],
+      ["Average win / loss", fmt.money(m.avg_win) + " / " + fmt.money(m.avg_loss)],
+      ["Best / worst", fmt.money(m.best_trade) + " / " + fmt.money(m.worst_trade)],
+      ["Average hold", fmt.num(m.avg_bars_held, 1) + " bars · R " + fmt.ratio(m.avg_r_multiple)],
+    ]],
+    ["Costs", [
+      ["Fees paid", fmt.money(m.fees_paid)],
+      ["Fees vs start equity", fmt.num(m.fees_pct_of_start, 2) + "%"],
+      ["Turnover", fmt.ratio(m.turnover_multiple) + "× equity"],
+      ["Round trip friction", (state.data.config.costs.round_trip_bps) + " bps"],
+    ]],
+  ];
+
+  for (const [title, rows] of groups) {
+    const card = document.createElement("section");
+    card.className = "card hoverable";
+    card.setAttribute("data-reveal", "");
+    const h = document.createElement("h2");
+    h.textContent = title;
+    const dl = document.createElement("dl");
+    rows.forEach(([label, value, cls]) => specRow(dl, label, value, cls));
+    card.append(h, dl);
+    host.append(card);
+  }
+}
+
+function renderMonths() {
+  const monthly = state.data.monthly || [];
+  const host = $("months");
+  const grid = $("monthGrid");
+  grid.textContent = "";
+  if (!monthly.length) { host.hidden = true; return; }
+  host.hidden = false;
+  const shown = monthly.slice(-24);
+  $("monthsTitle").textContent = `Monthly returns (last ${shown.length} months)`;
+  const peak = Math.max(...shown.map((r) => Math.abs(r.return_pct)), 1);
+  for (const row of shown) {
+    const v = row.return_pct;
+    const cell = document.createElement("div");
+    cell.className = "month " + (v > 0.05 ? "up" : v < -0.05 ? "down" : "");
+    const strength = Math.min(Math.abs(v) / peak, 1) * 0.16;
+    if (v > 0.05) cell.style.background = `color-mix(in srgb, var(--gain) ${(strength * 100).toFixed(0)}%, var(--card-2))`;
+    else if (v < -0.05) cell.style.background = `color-mix(in srgb, var(--loss) ${(strength * 100).toFixed(0)}%, var(--card-2))`;
+    const k = document.createElement("span");
+    k.className = "k";
+    k.textContent = row.month;
+    const val = document.createElement("span");
+    val.className = "v";
+    val.textContent = fmt.signedPct(v, 1);
+    cell.append(k, val);
+    cell.title = `${row.month}: ${fmt.signedPct(v)}`;
+    grid.append(cell);
+  }
+}
+
+function renderTable() {
+  const host = $("tableWrap");
+  const d = state.data;
+  const rows = state.table === "trades" ? d.trades : d.fills;
+  $("tableTitle").firstChild.textContent = state.table === "trades" ? "Trades" : "Fills";
+  $("tableCount").textContent = ` ${rows.length}`;
+
+  if (!rows.length) {
+    host.textContent = "";
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.style.padding = "16px";
+    p.textContent = `This run produced no ${state.table}. Check the notes below — often the signal never fired, or the orders were too small to fill.`;
+    host.append(p);
+    return;
+  }
+
+  const table = document.createElement("table");
+  const thead = document.createElement("thead");
+  const tbody = document.createElement("tbody");
+
+  const columns = state.table === "trades"
+    ? [["", ""], ["Entry", "date"], ["Exit", "date"], ["Side", ""], ["Qty", "num"],
+       ["Entry → exit", "num"], ["PnL", "num"], ["R", "num"], ["MFE / MAE", "num"], ["Bars", "num"], ["Why out", ""]]
+    : [["", ""], ["Time", "date"], ["Side", ""], ["Qty", "num"], ["Price", "num"],
+       ["Notional", "num"], ["Fee", "num"], ["Reason", ""]];
+
+  const headRow = document.createElement("tr");
+  for (const [label, cls] of columns) {
+    const th = document.createElement("th");
+    th.textContent = label;
+    if (cls === "num") th.className = "num";
+    headRow.append(th);
+  }
+  thead.append(headRow);
+
+  const maxR = Math.max(...rows.map((r) => Math.abs(r.r_multiple ?? 0)), 1e-9);
+
+  for (const r of rows) {
+    const tr = document.createElement("tr");
+
+    // A left edge whose colour is the sign and whose height is the magnitude
+    // of the result — a data encoding, not an ornament.
+    const edge = document.createElement("td");
+    edge.className = "edge";
+    const bar = document.createElement("span");
+    if (state.table === "trades") {
+      const frac = Math.min(Math.abs(r.r_multiple) / maxR, 1);
+      bar.style.height = (18 * frac + 3).toFixed(1) + "px";
+      bar.style.background = r.pnl >= 0 ? css("--gain") : css("--loss");
+    } else {
+      bar.style.height = "3px";
+      bar.style.background = r.side === "buy" ? css("--gain") : css("--loss");
+    }
+    edge.append(bar);
+    tr.append(edge);
+
+    const cells = state.table === "trades"
+      ? [
+          [fmt.date(r.entry_ts), ""],
+          [fmt.date(r.exit_ts), ""],
+          [r.side, "side-" + r.side],
+          [fmt.money(r.qty, 4), "num"],
+          [fmt.money(r.entry_price, 2) + " → " + fmt.money(r.exit_price, 2), "num"],
+          [fmt.money(r.pnl), "num " + (r.pnl >= 0 ? "pnl-pos" : "pnl-neg")],
+          [fmt.num(r.r_multiple, 2), "num"],
+          [fmt.num(r.mfe_pct, 1) + "% / " + fmt.num(r.mae_pct, 1) + "%", "num"],
+          [fmt.num(r.bars_held, 0), "num"],
+          [r.exit_reason, "reason"],
+        ]
+      : [
+          [fmt.dateTime(r.ts), ""],
+          [r.side, "side-" + (r.side === "buy" ? "long" : "short")],
+          [fmt.money(r.qty, 4), "num"],
+          [fmt.money(r.price, 2), "num"],
+          [fmt.money(r.notional), "num"],
+          [fmt.money(r.fee), "num"],
+          [r.reason, "reason"],
+        ];
+
+    for (const [value, cls] of cells) {
+      const td = document.createElement("td");
+      td.textContent = value;
+      if (cls) td.className = cls;
+      tr.append(td);
+    }
+    tbody.append(tr);
+  }
+
+  table.append(thead, tbody);
+  host.textContent = "";
+  host.append(table);
+}
+
+function renderNotes() {
+  const notes = state.data.notes || [];
+  $("notes").hidden = !notes.length;
+  const list = $("noteList");
+  list.textContent = "";
+  for (const note of notes) {
+    const li = document.createElement("li");
+    li.textContent = note;
+    list.append(li);
+  }
+}
+
+function renderRunList() {
+  const host = $("runList");
+  host.textContent = "";
+  $("runCount").textContent = String(state.runs.length);
+  for (const run of state.runs) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "runitem";
+    btn.dataset.runId = run.run_id;
+    const active = run.run_id === state.runId;
+    btn.setAttribute("aria-current", String(active));
+
+    const top = document.createElement("span");
+    top.className = "top";
+    const sym = document.createElement("span");
+    sym.className = "sym";
+    sym.textContent = run.symbol;
+    const tf = document.createElement("span");
+    tf.className = "tf";
+    tf.textContent = run.timeframe;
+    const ret = document.createElement("span");
+    ret.className = "ret " + (run.total_return_pct >= 0 ? "side-long" : "side-short");
+    ret.textContent = fmt.signedPct(run.total_return_pct, 1);
+    top.append(sym, tf, ret);
+
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.textContent = `${run.trades} trades · ${run.created_at.slice(0, 10)}`;
+
+    btn.append(top, meta);
+    btn.addEventListener("click", () => loadRun(run.run_id).catch(showError));
+    host.append(btn);
+  }
+}
+
+function renderRunPicker() {
+  const sel = $("runPicker");
+  sel.textContent = "";
+  for (const run of state.runs) {
+    const opt = document.createElement("option");
+    opt.value = run.run_id;
+    opt.textContent =
+      `${run.symbol} ${run.timeframe} · ${fmt.signedPct(run.total_return_pct)} · ${run.trades} trades · ${run.created_at.slice(0, 10)}`;
+    sel.append(opt);
+  }
+  sel.value = state.runId || "";
+}
+
+function renderAll() {
+  const hasData = Boolean(state.data);
+  $("main").hidden = !hasData;
+  $("empty").hidden = hasData || state.runs.length > 0;
+  // An empty run dropdown is a dead control: hide it until there is something in it.
+  $("runPicker").closest(".runpick").hidden = state.runs.length === 0;
+  if (!hasData) {
+    // Nothing to show: name the tool rather than leaving "Loading…" forever.
+    renderTitle("Backtest recorder");
+    $("subtitle").textContent = state.runs.length
+      ? "Pick a run to read."
+      : "No saved runs yet — start one from the New run form.";
+    $("mastMeta").textContent = "";
+    $("read").hidden = true;
+    renderRunList();
+    replayReveal();
+    return;
+  }
+  renderHeader();
+  renderSpec();
+  renderMonths();
+  renderTable();
+  renderNotes();
+  renderRunList();
+  draw();
+  updateReadout();
+  replayReveal();
+}
+
+/* ------------------------------------------------------------------ loader */
+
+async function fetchJSON(url, options) {
+  const res = await fetch(url, options);
+  const payload = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(payload.error || `${res.status} ${res.statusText}`);
+  return payload;
+}
+
+async function loadRuns(preferId) {
+  const { runs } = await fetchJSON("/api/runs");
+  state.runs = runs;
+  if (!runs.length) {
+    state.data = null;
+    state.runId = null;
+    renderRunPicker();
+    renderAll();
+    return;
+  }
+  const target = preferId && runs.some((r) => r.run_id === preferId) ? preferId : runs[0].run_id;
+  await loadRun(target);
+}
+
+async function loadRun(runId) {
+  state.runId = runId;
+  state.hover = null;
+  const token = ++loadToken;
+  const payload = await fetchJSON("/api/run/" + encodeURIComponent(runId));
+  // Holding down j sends several of these at once; only the newest may render.
+  if (token !== loadToken) return;
+  state.data = payload;
+  prefillForm(state.data);
+  renderRunPicker();
+  renderAll();
+  animateTrace();
+  const m = state.data.metrics, d = state.data.data;
+  announce(`${d.symbol} ${d.timeframe}, ${m.trades} trades, ${fmt.signedPct(m.total_return_pct)} in run ${state.runId}.`);
+}
+
+let loadToken = 0;
+
+function prefillForm(d) {
+  const form = $("runForm");
+  const set = (name, value) => {
+    const el = form.elements[name];
+    if (!el || value === undefined || value === null) return;
+    if (el.type === "checkbox") el.checked = Boolean(value);
+    else el.value = value;
+  };
+  const p = d.strategy.params || {};
+  set("symbol", d.data.symbol);
+  set("timeframe", d.data.timeframe);
+  set("provider", d.data.provider);
+  set("fast", p.fast);
+  set("slow", p.slow);
+  set("atr_stop_mult", p.atr_stop_mult);
+  set("trail_mult", p.trail_mult);
+  set("risk", p.risk_pct);
+  set("cash", d.config.initial_cash);
+  set("fee_bps", d.config.costs.fee_bps);
+  set("slippage_bps", d.config.costs.slippage_bps);
+  set("allow_short", d.config.risk.allow_short);
+  set("no_trend_filter", p.trend_filter === false);
+}
+
+/* ------------------------------------------------------------------- wiring */
+
+$("runPicker").addEventListener("change", (e) => {
+  loadRun(e.target.value).catch(showError);
+});
+
+function setScale(mode) {
+  state.scale = mode;
+  // Every control that names the scale, wherever it lives, agrees about it.
+  document.querySelectorAll("[data-scale]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset.scale === mode));
+  });
+  renderScaleFoot();
+  draw();
+}
+
+document.querySelectorAll("[data-scale]").forEach((btn) => {
+  btn.addEventListener("click", () => setScale(btn.dataset.scale));
+});
+
+$("toggleForm").addEventListener("click", () => {
+  const form = $("runForm");
+  form.hidden = !form.hidden;
+  $("toggleForm").setAttribute("aria-expanded", String(!form.hidden));
+  if (!form.hidden) form.elements.symbol.focus();
+});
+
+for (const [id, kind] of [["tabTrades", "trades"], ["tabFills", "fills"]]) {
+  $(id).addEventListener("click", () => {
+    state.table = kind;
+    $("tabTrades").setAttribute("aria-pressed", String(kind === "trades"));
+    $("tabFills").setAttribute("aria-pressed", String(kind === "fills"));
+    renderTable();
+  });
+}
+
+const equityCanvas = $("equityCanvas");
+equityCanvas.addEventListener("mousemove", (e) => markHover(e.clientX));
+equityCanvas.addEventListener("mouseleave", () => {
+  setScrubbing(false);
+  state.hover = null;
+  draw();
+  updateReadout();
+});
+equityCanvas.addEventListener("touchmove", (e) => {
+  if (e.touches[0]) markHover(e.touches[0].clientX);
+}, { passive: true });
+
+/* -- guide ----------------------------------------------------------------- */
+
+const guide = $("guide");
+
+function openGuide() { if (!guide.open) guide.showModal(); }
+function closeGuide() { if (guide.open) guide.close(); }
+$("openGuide").addEventListener("click", openGuide);
+$("openGuideAlt").addEventListener("click", openGuide);
+$("guideClose").addEventListener("click", closeGuide);
+$("guideDone").addEventListener("click", closeGuide);
+guide.addEventListener("click", (e) => {
+  // Clicks that land on the dialog element itself are backdrop clicks.
+  if (e.target !== guide) return;
+  const r = guide.getBoundingClientRect();
+  const outside =
+    e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+  if (outside) closeGuide();
+});
+/* One handler for the whole page. Keys stand down whenever the reader is typing
+   in a field, when the guide dialog is open (it owns Escape and scrolling), and
+   whenever a modifier is held, so nothing browser-level is hijacked. */
+document.addEventListener("keydown", (e) => {
+  if (guide.open) return;
+  if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  // The guide is available in every state, including before any run exists.
+  if (e.key === "?") { e.preventDefault(); openGuide(); return; }
+  if (!state.data) return;
+
+  const n = state.data.series.equity.length;
+  const coarse = Math.max(5, Math.round(n * 0.05));
+  const handled = () => e.preventDefault();
+
+  switch (e.key) {
+    case "ArrowLeft": if (scrub(e.shiftKey ? -coarse : -1, !e.repeat)) return handled(); break;
+    case "ArrowRight": if (scrub(e.shiftKey ? coarse : 1, !e.repeat)) return handled(); break;
+    case "y": case "Y": if (copyBar(state.data?.series, state.hover)) return handled(); break;
+    case "j": case "J": if (stepRun(1)) return handled(); break;
+    case "k": case "K": if (stepRun(-1)) return handled(); break;
+    case "Escape": clearScrub(); break;
+    default: break;
+  }
+});
+
+function copyBar(series, i) {
+  if (!series || i == null) {
+    announce("No bar selected.");
+    return false;
+  }
+  const n = series.equity.length;
+  const ts = series.ts[i];
+  const close = series.close[i];
+  const equity = series.equity[i];
+  const dd = series.drawdown_pct[i];
+  const plain = [
+    `${fmt.date(ts)} · bars ${i}:${i+1} · n=${n}`,
+    `close ${fmt.money(close,2)} · strategy equity ${fmt.money(equity,2)} · drawdown ${fmt.num(dd,2)}%`,
+  ].join("\n");
+  announce(`Bar date, close, strategy equity, drawdown copied.`);
+  navigator.clipboard.writeText(plain);
+  return true;
+}
+
+/* -- copy the starter command ---------------------------------------------- */
+
+$("copyCmd").addEventListener("click", async (e) => {
+  const btn = e.currentTarget;
+  const text = $("emptyCmd").textContent;
+  let settled = false;
+  const settle = (label) => {
+    if (settled) return;
+    settled = true;
+    btn.textContent = label;
+    setTimeout(() => { btn.textContent = "Copy"; settled = false; }, 1700);
+  };
+  try {
+    // A clipboard call can sit unresolved forever behind a permission prompt.
+    // Whatever happens, the button has to say something.
+    await Promise.race([
+      navigator.clipboard.writeText(text),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("clipboard timeout")), 800)),
+    ]);
+    settle("Copied");
+  } catch (err) {
+    // Fall back to selecting it, so Ctrl+C still works.
+    const range = document.createRange();
+    range.selectNodeContents($("emptyCmd"));
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    settle("Press Ctrl+C");
+  }
+});
+
+/* -- form ------------------------------------------------------------------ */
+
+$("runForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const button = $("runButton");
+  const hint = $("formHint");
+  const payload = {};
+  for (const el of form.elements) {
+    if (!el.name) continue;
+    payload[el.name] = el.type === "checkbox" ? el.checked : el.value;
+  }
+  if (!payload.start) delete payload.start;
+
+  button.disabled = true;
+  button.textContent = "Running…";
+  hint.textContent = "Fetching data and walking the bars. First run for a new symbol can take a while.";
+  try {
+    const result = await fetchJSON("/api/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    hint.textContent = result.verdict || "Run finished.";
+    await loadRuns(result.run_id);
+  } catch (err) {
+    hint.textContent = "";
+    showError(err);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Run backtest";
+  }
+});
+
+function showError(err) {
+  const read = $("read");
+  read.hidden = false;
+  read.className = "read warn";
+  $("readBadge").textContent = "PROBLEM";
+  $("readText").textContent = "Could not load: " + err.message;
+}
+
+let resizeTimer = null;
+new ResizeObserver(() => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { if (state.data) draw(); }, 60);
+}).observe(document.body);
+
+reduceMotion.addEventListener("change", () => {
+  state.reveal = 1;
+  if (state.data) draw();
+});
+
+initCursor();
+loadRuns().catch(showError);
+</script>
+</body>
+</html>
