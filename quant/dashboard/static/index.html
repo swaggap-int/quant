@@ -403,8 +403,10 @@
     .chart-foot { font-size: 11px; }
     .loghead h2 { font-size: 13.5px; }
     .spec { grid-template-columns: 1fr; }
-    .monthgrid { grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); }
+    .monthgrid { grid-template-columns: repeat(3, 1fr); }
+    .monthgrid > :nth-child(n+4) { grid-column: 1 / -1; margin-top: 8px; }
     .monthgrid > :nth-child(2) { grid-column: 1 / -1; margin-top: 8px; }
+    .monthgrid > :nth-child(3) { grid-column: 1 / -1; margin-top: 8px; }
   .legend .eq i { background: var(--trace); }
   .legend .bh i { background: var(--bench); }
   .legend .dd i { background: var(--loss); }
