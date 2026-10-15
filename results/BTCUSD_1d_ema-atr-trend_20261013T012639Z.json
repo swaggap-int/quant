@@ -91,7 +91,9 @@
     "buy_hold_cagr": -0.2358021184860083,
     "buy_hold_max_drawdown": -0.5307577953158951,
     "excess_return_pct": 26.361020676152314,
-    "excess_cagr_pct": 22.51962180643354
+    "excess_cagr_pct": 22.51962180643354,
+    "top_losses_share": 1.3064036587973207,
+    "top_wins_share": -2.3064036587973207
   },
   "monthly": [
     {
@@ -2518,5 +2520,29 @@
     "Fills assume taker pricing on every order; no maker rebates, no partial fills.",
     "Stops assume the bar's low/high was reachable; gaps fill at the open and slip further.",
     "Backtests cannot see your leverage limits, exchange outages or your own hesitation."
+  ],
+  "largest_losses": [
+    {
+      "side": "long",
+      "entry_ts": 1768694400000,
+      "exit_ts": 1768867200000,
+      "entry_price": 95157.544995,
+      "exit_price": 89125.80414091605,
+      "pnl": -205.81649578609662,
+      "pnl_pct": -6.532350328653905,
+      "bars_held": 2,
+      "exit_reason": "stop (atr trail loss)"
+    },
+    {
+      "side": "long",
+      "entry_ts": 1759449600000,
+      "exit_ts": 1760054400000,
+      "entry_price": 120681.640665,
+      "exit_price": 118058.55551674376,
+      "pnl": -88.07432805176269,
+      "pnl_pct": -2.371384187908187,
+      "bars_held": 7,
+      "exit_reason": "stop (atr trail loss)"
+    }
   ]
 }

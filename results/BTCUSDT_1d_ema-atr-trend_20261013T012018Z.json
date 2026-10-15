@@ -91,7 +91,9 @@
     "buy_hold_cagr": 0.1950231790192083,
     "buy_hold_max_drawdown": -0.7663274960125371,
     "excess_return_pct": -161.83184580394723,
-    "excess_cagr_pct": -16.52046001377423
+    "excess_cagr_pct": -16.52046001377423,
+    "top_losses_share": -0.32142491543306406,
+    "top_wins_share": 1.240380291167127
   },
   "monthly": [
     {
@@ -8524,5 +8526,62 @@
     "Fills assume taker pricing on every order; no maker rebates, no partial fills.",
     "Stops assume the bar's low/high was reachable; gaps fill at the open and slip further.",
     "Backtests cannot see your leverage limits, exchange outages or your own hesitation."
+  ],
+  "largest_losses": [
+    {
+      "side": "long",
+      "entry_ts": 1768694400000,
+      "exit_ts": 1768867200000,
+      "entry_price": 95191.01172,
+      "exit_price": 89344.00003389127,
+      "pnl": -247.239632013609,
+      "pnl_pct": -6.336256531871033,
+      "bars_held": 2,
+      "exit_reason": "stop (atr trail loss)"
+    },
+    {
+      "side": "long",
+      "entry_ts": 1660521600000,
+      "exit_ts": 1660867200000,
+      "entry_price": 24317.002425,
+      "exit_price": 22228.169994911474,
+      "pnl": -174.89450653581534,
+      "pnl_pct": -8.781417895131197,
+      "bars_held": 4,
+      "exit_reason": "stop (atr trail loss)"
+    },
+    {
+      "side": "long",
+      "entry_ts": 1757980800000,
+      "exit_ts": 1758585600000,
+      "entry_price": 115539.52088999999,
+      "exit_price": 111080.41585781398,
+      "pnl": -173.54608205062434,
+      "pnl_pct": -4.055517049784975,
+      "bars_held": 7,
+      "exit_reason": "stop (atr trail loss)"
+    },
+    {
+      "side": "long",
+      "entry_ts": 1727049600000,
+      "exit_ts": 1727740800000,
+      "entry_price": 63631.799999999996,
+      "exit_price": 60713.193504154435,
+      "pnl": -140.54588967304934,
+      "pnl_pct": -4.782123858431972,
+      "bars_held": 8,
+      "exit_reason": "stop (atr trail loss)"
+    },
+    {
+      "side": "long",
+      "entry_ts": 1721779200000,
+      "exit_ts": 1722470400000,
+      "entry_price": 65943.99552,
+      "exit_price": 63086.27076372467,
+      "pnl": -123.3581257241871,
+      "pnl_pct": -4.5292296880209575,
+      "bars_held": 8,
+      "exit_reason": "stop (atr trail loss)"
+    }
   ]
 }
