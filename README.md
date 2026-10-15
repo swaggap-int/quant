@@ -111,9 +111,26 @@ the instrument.
 * a hover crosshair with a per-bar readout: close, equity, cumulative return,
   drawdown
 * a spec sheet of returns, risk, trade quality and cost metrics
+* a fragility strip that names the largest losers and the share of the result they
+  explain, so a good-looking run is not mistaken for a robust one
 * monthly returns, and the full round-trip trade log (or the raw fill log)
 * a **New run** form that re-runs the backtester with different parameters, so
   you can see how fragile a result is to `fast`/`slow`/risk
+
+**Design rule used throughout:** the dashboard tries to make the weakest part of a
+result visible first. A pretty curve is still shown, but the page also names the
+drawdown, the trade count, the biggest losers and, when available, the share of the
+result those losers or winners explain. That is the difference between "looks good"
+and "looks good for a reason you can inspect". the CLI prints the result, the verdict,
+and, when the result has weak points, a short "Why this might flatter the strategy" list that
+ends by pointing at `run_robustness.py --grid small`. The idea is that one pretty run is the
+easiest place to fool yourself, so the tool says the skeptical next step out loud instead of
+making you remember it.
+* a **best setting** helper (`b`) that opens the robustness sweep with a default
+  small grid, so the first skeptical question is one keypress away
+* a **robustness** helper (`B`) that opens the full robustness sweep with the same
+  market, timeframe and settings as the run you are looking at, so skeptical questions
+  do not require re-typing the run's parameters
 
 **Light and dark.** The toggle in the top bar switches theme and remembers the
 choice in `localStorage`; with nothing stored it follows `prefers-color-scheme`.
@@ -177,15 +194,39 @@ US mirror, because `api.binance.com` returns HTTP 451 from US IPs), then OKX,
 then Kraken, then Coinbase. Coinbase has no weekly candles, so `--timeframe 1w`
 falls through to another venue.
 
+## After one backtest, read this before trusting it
+
+A single backtest is one window, one symbol, one parameter set and one history.
+That is useful, and it is not enough. The first honest question is not "did it make
+money?" but "what would make this result look better than it is?". For this engine
+and the shipped strategy, the usual suspects are:
+
+* **Window luck.** The result may depend heavily on the exact start and end dates. Try
+  another window; a real effect should survive a few of them.
+* **Parameter luck.** Neighbouring settings often give neighbouring results. If the
+  headline is carried by one tight corner of the grid, you have a setting, not an edge.
+* **Low trade count.** Few trades can look very good or very bad by chance. Around 15
+  trades is the floor for a calm read; fewer than that is mostly noise.
+* **Cost luck.** Zero fees or zero slippage can flatter a result that would not survive
+  them. If you turned costs down, say so.
+* **Regime luck.** A trend system can look great in one regime and bad in another. The
+  same curve that worked in one market can fail in another.
+
+The default next step is `run_robustness.py --grid small`. It is deliberately quick and
+deliberately unkind: it asks whether the result survives other markets, other settings
+and random entry timing. If you are deciding whether to care about a number, that is the
+command that matters.
+
 ## Robustness: is it an edge, or luck?
 
 One backtest tells you what happened in the window you chose. `run_robustness.py`
-asks whether the result survives being asked again somewhere else:
+asks whether the result survives being asked again somewhere else.
 
 ```bash
 python run_robustness.py                              # 4 markets x 15 settings + luck test
 python run_robustness.py --grid small --null-runs 50   # quick version
 python run_robustness.py --json --out results/robustness.json
+python run_robustness.py --windows 2020-01-01,2022-01-01 # same question, two windows
 ```
 
 It reports three things, in the order they matter:
@@ -239,6 +280,20 @@ of it is visible from a single backtest. The study is reproducible to the digit
 (same data, same `--seed`) and is saved to `results/robustness.json`, which the
 dashboard ignores because it is not a run.
 
+## What this project does and does not model
+
+**It models:** fills at the next bar's open, taker fees and slippage on every order,
+stops tested against the bar's low/high with gap fills at the open, risk-based sizing
+from the stop distance, and a verdict line that calls out the numbers it does not trust.
+
+**It does not model:** leverage limits, borrow or funding costs, liquidation, exchange
+outages, partial fills, slippage that varies by volatility or liquidity, portfolio
+construction across symbols, correlation or cross-asset risk, and anything that happens
+inside a bar. Shorting assumes 100% margin with no funding and no liquidation.
+
+In one sentence: this is a careful replay machine for one narrow idea, not a live trading
+system and not a prediction of what will happen next.
+
 ## Caveats — read before trusting a number
 
 * **Trend systems look bad in bull markets.** On BTC/USDT daily from 2021 the
@@ -254,10 +309,80 @@ dashboard ignores because it is not a run.
   and settings — but every cell still sees the whole window. A true walk-forward
   split, where parameters are chosen on past data and judged on data they never
   saw, is the honest next step; `quant/robustness.py` is the scaffolding for it.
+* **The new multi-window mode is a first cut, not a real out-of-sample study.* **The dashboard now names fragility explicitly.** On a run page it can show the largest
+  losers and the share of the result those few trades explain, because a good-looking
+  equity curve can still be mostly one or two lucky trades. That is the dashboard's job:
+  make the weak part of the story hard to miss.
+* **After a single backtest, the runner now says the honest next step out loud.** If the
+  result has weak points, it lists them and points at `run_robustness.py --grid small`,
+  because one pretty run is the easiest place to fool yourself.* **The roadmap and the intent are now explicit.** This is not a package that claims to be
+  done; it is a study toolkit with a stated direction: harder to fool yourself, easier to
+  ask the next skeptical question, and clearer about what it does not model.
+
+##### Extended roadmap — the bigger moves, in the order I would do them if this were the whole plan
+
+1. **A real walk-forward study.** Choose parameters on one chunk of history and judge them on
+   a later chunk they never saw. That is the first genuinely out-of-sample test and the natural
+   next layer above the current in-sample sweep.
+2. **More strategy skeletons, not just more parameters for one strategy.** The useful comparison is
+   usually "does this family of ideas survive" rather than "can I tune one idea harder".
+3. **Better cost realism.** Slippage that can rise with volatility or thin liquidity, and a cleaner
+   treatment of the places where fills are less polite than the model assumes.
+4. **A confidence/inference layer.** Something that can tell you when a result is interesting but
+   still too thin to trust, instead of letting a small win look like a finding.
+5. **A small set of reusable study helpers.** So you can ask "where does this break" without wiring
+   a new CLI each time.
+6. **Easier comparison between ideas.** Side-by-side runs, shared grids, and export paths that make it
+   painless to bring a result into a notebook or a second opinion.
+7. **A clearer line between exploration and decision.** The toolkit should get better at saying when a
+   result is merely suggestive, not when it is worthy of real money.
+
+#### Extended roadmap — the bigger moves, in the order I would do them if this were the whole plan
+
+1. **A real walk-forward study.** Choose parameters on one chunk of history and judge them on
+   a later chunk they never saw. That is the first genuinely out-of-sample test and the natural
+   next layer above the current in-sample sweep.
+2. **More strategy skeletons, not just more parameters for one strategy.** The useful comparison is
+   usually "does this family of ideas survive" rather than "can I tune one idea harder".
+3. **Better cost realism.** Slippage that can rise with volatility or thin liquidity, and a cleaner
+   treatment of the places where fills are less polite than the model assumes.
+4. **A confidence/inference layer.** Something that can tell you when a result is interesting but
+   still too thin to trust, instead of letting a small win look like a finding.
+5. **A small set of reusable study helpers.** So you can ask "where does this break" without wiring
+   a new CLI each time.
+6. **Easier comparison between ideas.** Side-by-side runs, shared grids, and export paths that make it
+   painless to bring a result into a notebook or a second opinion.
+7. **A clearer line between exploration and decision.** The toolkit should get better at saying when a
+   result is merely suggestive, not when it is worthy of real money.
+
+#
+
+* A real walk-forward study, where parameters are chosen on one chunk of history and judged
+  on a later chunk they never saw. That is the first genuinely out-of-sample test and the
+  natural next layer above the current in-sample sweep.
+* More strategy skeletons, not just more parameters for one strategy. The useful comparison is
+  usually "does this family of ideas survive" rather than "can I tune one idea harder".
+* Better cost realism: slippage that can rise with volatility or thin liquidity, and a cleaner
+  treatment of the places where fills are less polite than the model assumes.
+* A confidence/inference layer that can tell you when a result is interesting but still too thin
+  to trust, instead of letting a small win look like a finding.
+* A small set of reusable study helpers so you can ask "where does this break" without wiring
+  a new CLI each time.
+
+** When
+  you pass `--windows`, the runner repeats the whole sweep on each start date and then
+  folds the results together into one aggregate. If the same story survives more than
+  one start date, that is a better sign than a single window. It is still not a clean
+  train/test split, because every window is still tested against its own best-looking
+  settings; think of it as a stronger sanity check, not a free lunch.
 * **Bar data only.** Intrabar paths are unknown, so a bar that touches both the
   stop and a profit target is resolved conservatively but still an assumption.
 * **Survivorship of venues.** Data comes from live exchange APIs, so a delisted
   pair simply has no history.
+
+## Roadmap file
+
+The current plan is in `roadmap.md`. If this readme says one thing and `roadmap.md` says another, the roadmap is the more up-to-date statement of intent.
 
 ## Layout
 

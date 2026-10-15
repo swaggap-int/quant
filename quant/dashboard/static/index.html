@@ -2,7 +2,8 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f1115">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Backtest recorder</title>
 <script>
   /* Theme before first paint, so there is no flash of the wrong one.
@@ -298,7 +299,8 @@
   }
   select:hover, input:hover { border-color: var(--muted-dim); }
   select:focus-visible, input:focus-visible {
-    outline: none; border-color: var(--accent);
+    outline: 2px solid var(--accent); outline-offset: 2px;
+    border-color: var(--accent);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
   }
   select { min-width: 240px; max-width: 100%; }
@@ -421,6 +423,31 @@
 
   canvas { display: block; width: 100%; }
   #equityCanvas { height: 320px; }
+  .skip {
+    position: absolute;
+    left: 12px;
+    top: -100%;
+    padding: 8px 14px;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: var(--r-ctl);
+    text-decoration: none;
+    font-size: 13px;
+    z-index: 50;
+  }
+  .skip:focus {
+    position: relative;
+    top: auto;
+    left: auto;
+    padding: 8px 14px;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--accent);
+    border-radius: var(--r-ctl);
+    z-index: 51;
+  }
+
   #ddCanvas { height: 104px; margin-top: 8px; }
   .chartwrap { position: relative; }
 
@@ -520,6 +547,31 @@
 
   .notes ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
   .notes li { margin-bottom: 6px; max-width: 84ch; }
+
+  /* -- fragility strip ---------------------------------------------------- */
+
+  .fragility .losers {
+    margin: 0; padding: 0; list-style: none;
+    display: grid; gap: 8px;
+  }
+  .fragility .losers li {
+    display: grid; grid-template-columns: 1fr auto; gap: 8px 12px;
+    align-items: center; font-size: 13px;
+    padding: 0;
+  }
+  .fragility .losers .who {
+    color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .fragility .losers .val { font-weight: 600; text-align: right; }
+  .fragility .losers .val.neg { color: var(--loss); }
+  .fragility .frag-share {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--rule-soft);
+    display: flex; align-items: baseline; gap: 8px;
+    font-size: 12.5px; color: var(--muted);
+  }
+  .fragility .share-sep { color: var(--muted-dim); }
+  .fragility .losers:empty + .frag-share { border-top: 0; margin-top: 0; padding-top: 0; }
 
   .empty { margin-top: 22px; }
   .empty p { color: var(--muted); margin: 0 0 14px; max-width: 76ch; }
@@ -664,9 +716,48 @@
     .readout { justify-content: flex-start; }
     #equityCanvas { height: 250px; }
     #ddCanvas { height: 84px; margin-top: 6px; }
+    .shortcuts { gap: 4px 10px; font-size: 11px; }
+    .shortcuts kbd { font-size: 10px; }
+    .chart-foot { font-size: 11px; }
+    .loghead h2 { font-size: 13.5px; }
+    .spec { grid-template-columns: 1fr; }
+    .monthgrid { grid-template-columns: repeat(3, 1fr); }
+    .monthgrid > :nth-child(n+4) { grid-column: 1 / -1; margin-top: 8px; }
+    .monthgrid > :nth-child(2) { grid-column: 1 / -1; margin-top: 8px; }
+    .monthgrid > :nth-child(3) { grid-column: 1 / -1; margin-top: 8px; }
   }
-  @media (min-width: 901px) {
-    .rail { display: flex; }
+  /* Tablet: a real breakpoint between phone and desktop. Phone-to-tablet is the
+     gap where a single-column layout still feels too cramped for the thing the
+     reader is actually doing, so the rail comes back in a narrow form and the
+     chart gets a slightly taller canvas. The desktop breakpoint below is the one
+     that restores the full sidebar. */
+  @media (min-width: 901px) and (max-width: 1199px) {
+    .shell { grid-template-columns: 232px minmax(0, 1fr); }
+    .rail { display: flex; padding: 16px 12px 14px; }
+    .brand-name { font-size: 13px; }
+    .runpick { display: none; }
+    .chartctl { display: none; }
+    .content { padding: 16px 20px 64px; }
+    .mast-meta { text-align: right; }
+    .mast-meta .under { margin-left: auto; text-align: right; }
+    .chart-head { gap: 12px; }
+    .card { padding: 16px 16px; }
+    .readout { justify-content: flex-end; }
+    .shortcuts { gap: 5px 12px; font-size: 11px; }
+    .shortcuts kbd { font-size: 10px; }
+    .chart-foot { font-size: 11px; }
+    .loghead h2 { font-size: 13.5px; }
+    .spec { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .monthgrid { grid-template-columns: repeat(4, 1fr); }
+    .monthgrid > :nth-child(n+5) { grid-column: 1 / -1; margin-top: 8px; }
+    #equityCanvas { height: 300px; }
+    #ddCanvas { height: 96px; margin-top: 7px; }
+  }
+  
+  @media (min-width: 1200px) {
+    .shell { grid-template-columns: 268px minmax(0, 1fr); }
+    .rail { display: flex; padding: 18px 14px 16px; }
+    .brand-name { font-size: 14px; }
     .runpick { display: none; }
     .chartctl { display: none; }
     .content { padding: 18px 26px 70px; }
@@ -685,10 +776,6 @@
     .monthgrid > :nth-child(n+4) { grid-column: 1 / -1; margin-top: 8px; }
     .monthgrid > :nth-child(2) { grid-column: 1 / -1; margin-top: 8px; }
     .monthgrid > :nth-child(3) { grid-column: 1 / -1; margin-top: 8px; }
-    /* The transition between phone and desktop is tight by construction: the same
-       values live in both breakpoints, and the only switch is rail/runpick/chartctl.
-       The sidebar is a real flex item again once the window is wide enough, so the
-       desktop grid snaps back without a layout jump. */
   }
 </style>
 </head>
@@ -696,7 +783,7 @@
 
 <div class="shell">
 
-  <aside class="rail">
+  <aside class="rail" aria-label="Saves" role="banner">
     <div class="brand">
       <span class="mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -723,6 +810,7 @@
 
     <div class="railfoot">
       <button type="button" class="ghost" id="openGuideAlt">How to read this</button>
+      <button type="button" class="ghost" id="openRobustness">Robustness sweep</button>
       <span class="ver">v0.1.0 · loopback only</span>
     </div>
   </aside>
@@ -798,11 +886,13 @@
       <p>Every run you make lands in <code>results/</code> as a JSON file, and this page reads them all. Start one from the form above, or from a terminal:</p>
       <div class="prewrap">
         <pre id="emptyCmd">python run_backtest.py --symbol BTC/USDT --timeframe 1d --start 2021-01-01</pre>
-        <button type="button" class="copybtn ghost" id="copyCmd" data-hot>Copy</button>
-      </div>
-    </div>
+    <button type="button" class="copybtn ghost" id="copyCmd" data-hot aria-label="Copy equity curve">Copy</button>
+          </div>
+        </div>
 
-    <main id="main">
+        <a href="#main" class="skip">Skip to main</a>
+
+        <main id="main">
       <section class="card hoverable" data-reveal>
         <div class="chart-head">
           <div class="legend">
@@ -834,9 +924,15 @@
           <span class="grp"><kbd>←</kbd><kbd>→</kbd>scrub bars</span>
           <span class="grp"><kbd>Shift</kbd>+<kbd>←</kbd><kbd>→</kbd>a twentieth at a time</span>
           <span class="grp"><kbd>j</kbd><kbd>k</kbd>previous / next run</span>
+          <span class="grp"><kbd>b</kbd>best setting</span>
+          <span class="grp"><kbd>B</kbd>robustness sweep</span>
+          <span class="grp"><kbd>b</kbd>best setting</span>
+          <span class="grp"><kbd>B</kbd>robustness sweep</span>
           <span class="grp"><kbd>Esc</kbd>clear</span>
           <span class="grp"><kbd>y</kbd>copy bar</span>
+          <span class="grp"><kbd>b</kbd>best setting</span>
           <span class="grp"><kbd>?</kbd>guide</span>
+          <span class="grp"><kbd>B</kbd>robustness sweep</span>
         </p>
       </section>
 
@@ -862,7 +958,19 @@
         <div class="cardhead"><h2>What this backtest does not model</h2></div>
         <ul id="noteList"></ul>
       </section>
-    </main>
+
+    <section class="card fragility" id="fragility" hidden data-reveal>
+      <div class="cardhead"><h2>Where the result is fragile</h2></div>
+      <p class="hint" id="fragilityHint">This run has too few trades to calmly separate luck from skill.</p>
+      <ul id="topLosers" class="losers"></ul>
+      <div class="frag-share">
+        <span id="topLossesShare"></span>
+        <span class="share-sep">·</span>
+        <span id="topWinsShare"></span>
+      </div>
+    </section>
+
+          </main>
   </div>
 </div>
 
@@ -975,7 +1083,7 @@
 
 <div class="cur cur-ring" id="curRing" aria-hidden="true"></div>
 <div class="cur cur-dot" id="curDot" aria-hidden="true"></div>
-<p class="sr-only" id="srStatus" role="status" aria-live="polite"></p>
+<p class="sr-only" id="srStatus" role="status" aria-live="polite" aria-atomic="true" aria-busy="true"></p>
 
 <script>
 "use strict";
@@ -1758,6 +1866,63 @@ function renderNotes() {
   }
 }
 
+function renderFragility() {
+  const d = state.data;
+  const frag = $("fragility");
+  const trades = d?.trades ?? [];
+  // Structure the read on trades, not on the verdict: the verdict is a pass/fail
+  // rule, the fragility strip is the itemised why.
+  if (!d || !trades.length) {
+    frag.hidden = true;
+    return;
+  }
+  const m = d.metrics;
+  const topLossesShare = m.top_losses_share;
+  const topWinsShare = m.top_wins_share;
+  const nTrades = m.trades;
+  // Keep the card visible whenever there are trades to inspect. The hint is the
+  // soft warning for thin samples; the strip is the real content.
+  frag.hidden = false;
+  $("fragilityHint").textContent =
+    nTrades < 20
+      ? `Only ${nTrades} trades — too few to calmly separate luck from skill.`
+      : `Largest losers and how much of the result they explain.`;
+
+  const list = $("topLosers");
+  list.textContent = "";
+  const losses = Array.isArray(d.largest_losses) ? d.largest_losses : [];
+  if (!losses.length) {
+    const li = document.createElement("li");
+    li.className = "none";
+    li.textContent = "No losing trades in this run.";
+    list.append(li);
+  } else {
+    for (const t of losses) {
+      const li = document.createElement("li");
+      const who = document.createElement("span");
+      who.className = "who";
+      const dt = t.entry_ts ? new Date(t.entry_ts).toISOString().slice(0, 10) : "–";
+      const side = t.side ? t.side.charAt(0).toUpperCase() + t.side.slice(1) : "–";
+      const held = t.bars_held != null ? String(t.bars_held) : "–";
+      who.textContent = `${dt} · ${side} · ${held} bars${t.exit_reason ? " · " + t.exit_reason : ""}`;
+      const val = document.createElement("span");
+      val.className = "val neg";
+      val.textContent = fmt.money(t.pnl) + (isFinite(t.pnl_pct) ? " (" + fmt.signedPct(t.pnl_pct) + ")" : "");
+      li.append(who, val);
+      list.append(li);
+    }
+  }
+
+  const lossesShare = $("topLossesShare");
+  const winsShare = $("topWinsShare");
+  if (isFinite(topLossesShare) && isFinite(topWinsShare)) {
+    lossesShare.textContent = `worst ${Math.min(3, nTrades)} trades explain ${fmt.signedPct(topLossesShare)} of the result`;
+    winsShare.textContent = `best ${Math.min(3, nTrades)} trades explain ${fmt.signedPct(topWinsShare)} of the result`;
+  } else {
+    lossesShare.textContent = ""; winsShare.textContent = "";
+  }
+}
+
 function renderRunList() {
   const host = $("runList");
   host.textContent = "";
@@ -1829,6 +1994,7 @@ function renderAll() {
   renderMonths();
   renderTable();
   renderNotes();
+  renderFragility();
   renderRunList();
   draw();
   updateReadout();
@@ -2082,6 +2248,7 @@ function showError(err) {
   read.className = "read warn";
   $("readBadge").textContent = "PROBLEM";
   $("readText").textContent = "Could not load: " + err.message;
+  $("fragility").hidden = true;
 }
 
 let resizeTimer = null;

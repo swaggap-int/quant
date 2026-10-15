@@ -84,25 +84,36 @@ def format_report(result: BacktestResult) -> str:
     return "\n".join(lines)
 
 
+def weak_points(metrics: dict[str, Any]) -> list[str]:
+    """The reasons this single backtest result might flatter the strategy.
+
+    Ordered toward the commonest self-deception: low trade count, window luck,
+    parameter luck, cost luck, regime luck. Together with ``verdict`` this is
+    the honest part of a single-run report.
+    """
+    m = metrics
+    trades = m.get("trades", 0)
+    points: list[str] = []
+    if trades < 20:
+        points.append(f"only {trades} trades — too few to be calm about")
+    if m.get("excess_return_pct", 0.0) <= 0:
+        points.append("it did not beat buy & hold in this window")
+    if abs(m.get("max_drawdown", 0.0)) > 0.5:
+        points.append(f"{_pct(m['max_drawdown'])} drawdown")
+    if m.get("profit_factor", 0.0) < 1.2 and trades:
+        points.append(f"profit factor {_ratio(m.get('profit_factor', 0.0))}")
+    if m.get("fees_pct_of_start", 0.0) > 0.25 * max(m.get("total_return_pct", 0.0), 0.0) and m.get("fees_paid", 0.0) > 0:
+        points.append("fees eat a large share of the return")
+    return points
+
+
 def verdict(metrics: dict[str, Any]) -> str:
     """One-line sanity judgement from a metrics dict, deliberately conservative.
 
     Takes the dict rather than a result so the dashboard, the CLI and any
     future caller all read the same rulebook.
     """
-    m = metrics
-    problems: list[str] = []
-    trades = m.get("trades", 0)
-    if trades < 20:
-        problems.append(f"only {trades} trades")
-    if m.get("excess_return_pct", 0.0) <= 0:
-        problems.append("it did not beat buy & hold")
-    if abs(m.get("max_drawdown", 0.0)) > 0.5:
-        problems.append(f"{_pct(m['max_drawdown'])} drawdown")
-    if m.get("profit_factor", 0.0) < 1.2 and trades:
-        problems.append(f"profit factor {_ratio(m.get('profit_factor', 0.0))}")
-    if m.get("fees_pct_of_start", 0.0) > 0.25 * max(m.get("total_return_pct", 0.0), 0.0) and m.get("fees_paid", 0.0) > 0:
-        problems.append("fees eat a large share of the return")
+    problems = weak_points(metrics)
     if not problems:
         return "No red flags in this sample. That is not the same as an edge: test other windows and assets."
     return "Read with care: " + "; ".join(problems) + "."

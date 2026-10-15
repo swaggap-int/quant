@@ -223,3 +223,51 @@ def monthly_returns(ts: np.ndarray, equity: np.ndarray) -> list[dict[str, Any]]:
         out.append({"month": key, "return_pct": float((last / base - 1.0) * 100.0) if base else 0.0})
         prev_close = last
     return out
+
+
+def largest_losses(trades: Sequence[dict[str, Any]], *, k: int = 5) -> list[dict[str, Any]]:
+    """The worst realized trades, for an at-a-glance fragility read."""
+    neg = [t for t in trades if float(t.get("pnl", 0.0)) <= 0]
+    neg.sort(key=lambda t: float(t.get("pnl", 0.0)))
+    return [
+        {
+            "side": t.get("side"),
+            "entry_ts": t.get("entry_ts"),
+            "exit_ts": t.get("exit_ts"),
+            "entry_price": float(t.get("entry_price", 0.0)),
+            "exit_price": float(t.get("exit_price", 0.0)),
+            "pnl": float(t.get("pnl", 0.0)),
+            "pnl_pct": float(t.get("return_pct", 0.0)),
+            "bars_held": int(t.get("bars_held", 0)),
+            "exit_reason": t.get("exit_reason"),
+        }
+        for t in neg[:k]
+    ]
+
+
+def concentration_read(trades: Sequence[dict[str, Any]], *, top_k: int = 3) -> dict[str, Any]:
+    """A small structural read of whether the result leans on a few trades.
+
+    Returns the share of net PnL explained by the best ``top_k`` winning trades
+    and the share explained by the worst ``top_k`` losing trades. If the result is
+    carried by one or two outliers, that is worth saying plainly.
+    """
+    wins = sorted([t for t in trades if float(t.get("pnl", 0.0)) > 0], key=lambda t: float(t.get("pnl", 0.0)), reverse=True)
+    losses = sorted([t for t in trades if float(t.get("pnl", 0.0)) <= 0], key=lambda t: float(t.get("pnl", 0.0)))
+    gross_profit = float(sum(float(t.get("pnl", 0.0)) for t in wins))
+    gross_loss = float(sum(float(t.get("pnl", 0.0)) for t in losses))
+    net = gross_profit + gross_loss
+    best_share = float(_safe_div(sum(float(t.get("pnl", 0.0)) for t in wins[:top_k]), net)) if net else 0.0
+    worst_share = float(_safe_div(sum(float(t.get("pnl", 0.0)) for t in losses[:top_k]), net)) if net else 0.0
+    if net < 0:
+        best_share, worst_share = -worst_share, -best_share
+    return {
+        "top_k": top_k,
+        "top_wins_share": best_share,
+        "top_losses_share": worst_share,
+        "winners_total": gross_profit,
+        "losers_total": gross_loss,
+        "net": net,
+        "n_wins": len(wins),
+        "n_losses": len(losses),
+    }

@@ -116,6 +116,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
+    from quant.report import weak_points
+
     if args.json:
         import json
 
@@ -123,6 +125,14 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print(format_report(result))
         print(f" {verdict(result.metrics)}")
+        w = weak_points(result.metrics)
+        if w:
+            print(" Why this might flatter the strategy:")
+            for line in w:
+                print(f"   - {line}")
+            print(" Next step if you care about the result: run_robustness.py --grid small")
+        else:
+            print(" Next step if you care about the result: run_robustness.py --grid small")
 
     if not args.no_save:
         path = Path(args.out) if args.out else RESULTS_DIR / f"{result.run_id}.json"

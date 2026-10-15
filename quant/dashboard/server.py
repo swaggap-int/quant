@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Any
 
 from quant.report import verdict
+from quant.metrics import largest_losses, concentration_read
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -108,8 +109,12 @@ class RunIndex:
             payload = self._load(path)
             if not payload:
                 continue
+            trades = payload.get("trades", [])
+            if isinstance(trades, int):
+                trades = []
             m = payload.get("metrics", {})
             d = payload.get("data", {})
+            cc = concentration_read(trades) if isinstance(trades, list) else {}
             out.append(
                 {
                     "run_id": payload.get("run_id", path.stem),
@@ -129,6 +134,9 @@ class RunIndex:
                     "trades": m.get("trades", 0),
                     "final_equity": m.get("final_equity", 0.0),
                     "read": verdict(m),
+                    "largest_losses": largest_losses(trades) if isinstance(trades, list) else [],
+                    "top_losses_share": cc.get("top_losses_share"),
+                    "top_wins_share": cc.get("top_wins_share"),
                 }
             )
         return out
@@ -138,7 +146,15 @@ class RunIndex:
             raise BadRequest("malformed run id")
         for path in self.paths():
             if path.stem == run_id or path.name == f"{run_id}.json":
-                return self._load(path)
+                payload = self._load(path)
+                if payload and isinstance(payload.get("trades"), list):
+                    m = payload.setdefault("metrics", {})
+                    if "largest_losses" not in payload:
+                        payload["largest_losses"] = largest_losses(payload["trades"])
+                    cc = concentration_read(payload["trades"])
+                    m.setdefault("top_losses_share", cc["top_losses_share"])
+                    m.setdefault("top_wins_share", cc["top_wins_share"])
+                return payload
         return None
 
 
@@ -254,7 +270,31 @@ def launch_backtest(payload: dict[str, Any], results_dir: Path = DEFAULT_RESULTS
         (ln.strip() for ln in reversed(stdout.splitlines()) if ln.strip().startswith(("Read with care", "No red flags"))),
         "",
     )
-    return {"run_id": run_id, "report": stdout, "verdict": verdict_line}
+    result_payload = {"run_id": run_id, "report": stdout, "verdict": verdict_line}
+    # Keep the on-disk result consistent with what the dashboard renders, so a freshly
+    # launched run already carries largest_losses + top_losses_share/top_wins_share for
+    # the fragility strip without a separate normalization pass. The POST response and
+    # the file on disk therefore both include those fields.
+    try:
+        path = ROOT / "results" / f"{run_id}.json"
+        file_payload = json.loads(path.read_text(encoding="utf-8"))
+        trades = file_payload.get("trades", [])
+        if isinstance(trades, list):
+            cc = concentration_read(trades)
+            enriched = {
+                "largest_losses": largest_losses(trades),
+                "metrics": dict(file_payload.get("metrics", {}),
+                               top_losses_share=cc["top_losses_share"],
+                               top_wins_share=cc["top_wins_share"]),
+            }
+            file_payload.update(enriched)
+            result_payload["largest_losses"] = enriched["largest_losses"]
+            result_payload["metrics"] = enriched["metrics"]
+            path.write_text(json.dumps(file_payload, indent=2, allow_nan=False), encoding="utf-8")
+            result_payload.update(enriched)
+    except Exception:
+        pass
+    return result_payload
 
 
 # --------------------------------------------------------------------------- #
@@ -301,6 +341,13 @@ def make_handler(index: RunIndex) -> type[BaseHTTPRequestHandler]:
                     payload = index.get(run_id)
                     if payload is None:
                         return self._json(404, {"error": f"run {run_id!r} not found"})
+                    if isinstance(payload.get("trades"), list):
+                        m = payload.setdefault("metrics", {})
+                        if "largest_losses" not in payload:
+                            payload["largest_losses"] = largest_losses(payload["trades"])
+                        cc = concentration_read(payload["trades"])
+                        m.setdefault("top_losses_share", cc["top_losses_share"])
+                        m.setdefault("top_wins_share", cc["top_wins_share"])
                     return self._json(200, payload)
                 if path == "/api/health":
                     return self._json(200, {"ok": True, "runs": len(index.summaries())})
