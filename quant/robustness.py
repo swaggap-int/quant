@@ -44,7 +44,7 @@ from quant.datafeed import Candles, DataError, load_candles
 from quant.engine import Engine
 from quant.indicators import atr
 from quant.report import verdict
-from quant.strategies import EmaAtrTrend
+from quant.strategies import BollingerReversion, EmaAtrTrend
 from quant.strategies.base import BarWindow, Strategy
 
 #: A cell must close at least this many trades before its return means
@@ -70,6 +70,28 @@ BASELINE_PARAMS: dict[str, Any] = {
 
 _EMA_PAIRS: tuple[tuple[int, int], ...] = ((10, 40), (10, 80), (20, 50), (20, 100), (30, 60))
 _RISK_SHAPES: tuple[tuple[float, float], ...] = ((2.0, 2.5), (2.5, 3.0), (4.0, 5.0))
+_BOLLINGER_BANDS: tuple[tuple[int, float], ...] = (
+    (20, 2.0),
+    (20, 2.5),
+    (30, 2.0),
+    (30, 2.5),
+    (50, 2.5),
+)
+_BOLLINGER_STOPS: tuple[float, ...] = (2.5, 3.5, 5.0)
+
+SWEEP_FAMILIES = ("ema", "bollinger")
+SWEEP_FAMILY_LABELS = {"ema": "EMA-ATR", "bollinger": "Bollinger reversion"}
+
+BOLLINGER_BASELINE_PARAMS: dict[str, Any] = {
+    "period": 20,
+    "entry_k": 2.0,
+    "trend_period": 200,
+    "atr_period": 14,
+    "atr_stop_mult": 2.5,
+    "risk_pct": 0.02,
+    "max_weight": 1.0,
+    "trend_filter": True,
+}
 
 
 # --------------------------------------------------------------------------- #
@@ -133,8 +155,66 @@ def small_param_grid(risk_pct: float = 0.02) -> list[dict[str, Any]]:
     ]
 
 
-def make_strategy(params: dict[str, Any]) -> EmaAtrTrend:
-    """Build the strategy from a parameter dict, defaulting every missing key."""
+def bollinger_param_grid(risk_pct: float = 0.02) -> list[dict[str, Any]]:
+    """15 settings spanning band width and ATR stop width."""
+    return [
+        {
+            **BOLLINGER_BASELINE_PARAMS,
+            "period": period,
+            "entry_k": entry_k,
+            "atr_stop_mult": stop,
+            "risk_pct": risk_pct,
+        }
+        for period, entry_k in _BOLLINGER_BANDS
+        for stop in _BOLLINGER_STOPS
+    ]
+
+
+def bollinger_small_param_grid(risk_pct: float = 0.02) -> list[dict[str, Any]]:
+    """Three band settings matching the walk-forward presets."""
+    return [
+        {**BOLLINGER_BASELINE_PARAMS, "period": 20, "entry_k": 2.0, "atr_stop_mult": 2.5, "risk_pct": risk_pct},
+        {**BOLLINGER_BASELINE_PARAMS, "period": 30, "entry_k": 2.0, "atr_stop_mult": 2.5, "risk_pct": risk_pct},
+        {**BOLLINGER_BASELINE_PARAMS, "period": 50, "entry_k": 2.5, "atr_stop_mult": 3.0, "risk_pct": risk_pct},
+    ]
+
+
+def param_grid(
+    family: str = "ema", risk_pct: float = 0.02, *, small: bool = False
+) -> list[dict[str, Any]]:
+    """The grid for one family, sharing the same small/default sizes."""
+    if family == "bollinger":
+        return bollinger_small_param_grid(risk_pct) if small else bollinger_param_grid(risk_pct)
+    if family != "ema":
+        raise ValueError(f"unknown strategy family: {family}")
+    return small_param_grid(risk_pct) if small else default_param_grid(risk_pct)
+
+
+def baseline_params(family: str = "ema") -> dict[str, Any]:
+    """Default parameters for a family, used by labels and the null test."""
+    if family == "bollinger":
+        return dict(BOLLINGER_BASELINE_PARAMS)
+    if family == "ema":
+        return dict(BASELINE_PARAMS)
+    raise ValueError(f"unknown strategy family: {family}")
+
+
+def make_strategy(params: dict[str, Any], family: str = "ema") -> Strategy:
+    """Build one family's strategy, defaulting every missing parameter."""
+    if family == "bollinger":
+        merged = {**BOLLINGER_BASELINE_PARAMS, **params}
+        return BollingerReversion(
+            period=int(merged["period"]),
+            entry_k=float(merged["entry_k"]),
+            trend_period=int(merged["trend_period"]),
+            atr_period=int(merged["atr_period"]),
+            atr_stop_mult=float(merged["atr_stop_mult"]),
+            risk_pct=float(merged["risk_pct"]),
+            max_weight=float(merged["max_weight"]),
+            trend_filter=bool(merged["trend_filter"]),
+        )
+    if family != "ema":
+        raise ValueError(f"unknown strategy family: {family}")
     merged = {**BASELINE_PARAMS, **params}
     return EmaAtrTrend(
         fast=int(merged["fast"]),
@@ -148,8 +228,14 @@ def make_strategy(params: dict[str, Any]) -> EmaAtrTrend:
     )
 
 
-def short_params(params: dict[str, Any]) -> str:
-    """Compact label for a parameter set, e.g. ``20/50 s2.5 t3.0``."""
+def short_params(params: dict[str, Any], family: str | None = None) -> str:
+    """Compact label, inferring Bollinger from its band-shaped parameters."""
+    if family == "bollinger" or (family is None and "period" in params and "entry_k" in params):
+        merged = {**BOLLINGER_BASELINE_PARAMS, **params}
+        return (
+            f"bb{int(merged['period'])} k{float(merged['entry_k']):.1f} "
+            f"s{float(merged['atr_stop_mult']):.1f}"
+        )
     merged = {**BASELINE_PARAMS, **params}
     return (
         f"{int(merged['fast'])}/{int(merged['slow'])} "
@@ -380,14 +466,15 @@ def null_test(
     params: dict[str, Any] | None = None,
     *,
     base_config: BacktestConfig | None = None,
+    family: str = "ema",
     replicates: int = DEFAULT_NULL_RUNS,
     seed: int = 0,
     selection_n: int = 1,
 ) -> NullResult:
     """Run the real strategy, then ``replicates`` randomly timed controls."""
-    params = dict(params or BASELINE_PARAMS)
+    params = dict(params or baseline_params(family))
     cfg = _market_config(base_config, market)
-    strategy = make_strategy(params)
+    strategy = make_strategy(params, family)
     try:
         real = Engine(cfg, strategy).run(candles)
     except ValueError as exc:
@@ -510,6 +597,7 @@ class SweepReport:
     grid_size: int
     window: dict[str, Any]
     summary: dict[str, Any]
+    family: str = "ema"
     #: Market label -> bars, kept so the luck test can reuse the download.
     data: dict[str, Candles] = field(default_factory=dict)
 
@@ -519,6 +607,7 @@ class SweepReport:
     def to_dict(self) -> dict[str, Any]:
         return _clean(
             {
+                "family": self.family,
                 "window": self.window,
                 "grid_size": self.grid_size,
                 "summary": self.summary,
@@ -554,6 +643,7 @@ def run_sweep(
     grid: Sequence[dict[str, Any]],
     *,
     base_config: BacktestConfig | None = None,
+    family: str = "ema",
     min_trades: int = DEFAULT_MIN_TRADES,
     loader: Callable[[Market], Candles] | None = None,
     refresh: bool = False,
@@ -595,7 +685,7 @@ def run_sweep(
         if on_progress:
             on_progress(f"  {market.label:<16} {len(candles)} bars  {candles.start_iso} -> {candles.end_iso}")
         for params in grid:
-            strategy = make_strategy(params)
+            strategy = make_strategy(params, family)
             try:
                 result = Engine(cfg, strategy).run(candles)
                 metrics = dict(result.metrics)
@@ -620,7 +710,8 @@ def run_sweep(
     }
     summary = summarize(cells, [], grid_size=len(grid), min_trades=min_trades)
     return SweepReport(
-        cells=cells, nulls=[], grid_size=len(grid), window=window, summary=summary, data=loaded
+        cells=cells, nulls=[], grid_size=len(grid), window=window, summary=summary,
+        family=family, data=loaded,
     )
 
 
@@ -629,6 +720,7 @@ def run_study(
     grid: Sequence[dict[str, Any]],
     *,
     base_config: BacktestConfig | None = None,
+    family: str = "ema",
     min_trades: int = DEFAULT_MIN_TRADES,
     loader: Callable[[Market], Candles] | None = None,
     refresh: bool = False,
@@ -641,7 +733,7 @@ def run_study(
     """Breadth sweep plus the luck test, sharing one download per market."""
     report = run_sweep(
         markets, grid,
-        base_config=base_config, min_trades=min_trades,
+        base_config=base_config, family=family, min_trades=min_trades,
         loader=loader, refresh=refresh, verbose=verbose, on_progress=on_progress,
     )
     if null_runs <= 0:
@@ -656,7 +748,7 @@ def run_study(
         report.nulls.append(
             null_test(
                 market, candles, reference_params,
-                base_config=base_config, replicates=null_runs, seed=seed,
+                base_config=base_config, family=family, replicates=null_runs, seed=seed,
                 selection_n=len(grid),
             )
         )
@@ -912,6 +1004,7 @@ def format_sweep_report(report: SweepReport) -> str:
     lines.append(_rule(82, "="))
     n_markets = len(s["by_market"])
     lines.append(" ROBUSTNESS SWEEP  -  does it work anywhere other than the window you chose?")
+    lines.append(f" family: {SWEEP_FAMILY_LABELS.get(report.family, report.family)}")
     lines.append(
         f" {n_markets} market{'s' if n_markets != 1 else ''} x {s['grid_size']} settings = "
         f"{s['planned']} runs   "

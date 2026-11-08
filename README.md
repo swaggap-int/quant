@@ -294,16 +294,19 @@ One backtest tells you what happened in the window you chose. `run_robustness.py
 asks whether the result survives being asked again somewhere else.
 
 ```bash
-python run_robustness.py                              # 4 markets x 15 settings + luck test
+python run_robustness.py                              # EMA-ATR, 4 markets x 15 settings + luck test
+python run_robustness.py --family bollinger            # Bollinger reversion, separate output
 python run_robustness.py --grid small --null-runs 50   # quick version
 python run_robustness.py --json --out results/robustness.json
 python run_robustness.py --windows 2020-01-01,2022-01-01 # same question, two windows
 ```
 
-Saving to the default `results/robustness.json` automatically refreshes the
-frozen breadth read (`results/explore_notes.json`) and the dashboard excess
-snapshot (`results/dashboard_excess.json`). Use `--no-dashboard-refresh` to skip
-that follow-up; custom `--out` paths are left alone.
+The sweep runs EMA-ATR by default. Saving to the default `results/robustness.json`
+automatically refreshes the frozen breadth read (`results/explore_notes.json`)
+and the dashboard excess snapshot (`results/dashboard_excess.json`). Use
+`--no-dashboard-refresh` to skip that follow-up; custom `--out` paths are left
+alone. A Bollinger sweep defaults to `results/robustness_bollinger.json` and
+never refreshes the EMA dashboard read.
 
 It reports three things, in the order they matter:
 
@@ -358,6 +361,35 @@ holding the asset. That is a more useful sentence than "+18.5% return", and none
 of it is visible from a single backtest. The study is reproducible to the digit
 (same data, same `--seed`) and is saved to `results/robustness.json`, which the
 dashboard ignores because it is not a run.
+
+### What the Bollinger reversion sweep says
+
+The same markets and window with `--family bollinger`, using the walk-forward
+family's bands and ATR stop. It is a separate study and does not replace the EMA
+baseline above.
+
+BTC and ETH, daily and 4-hourly, from 2021: 60 combinations, 200 random
+schedules per market, `--seed 7`.
+
+| market | settings | beat b&h | median excess | median Sharpe | trades | luck p |
+| --- | --- | --- | --- | --- | --- | --- |
+| BTC/USDT 1d | 15 | 0 | −156.0 pts | 0.33 | 113 | 0.22 |
+| ETH/USDT 1d | 15 | 0 | −207.2 pts | 0.00 | 84 | 0.40 |
+| BTC/USDT 4h | 15 | 0 | −155.4 pts | 0.24 | 736 | 0.34 |
+| ETH/USDT 4h | 15 | 0 | −201.9 pts | −0.13 | 638 | 0.04 |
+
+(excess is in percentage points of return against buy & hold over the same window)
+
+None of the 60 combinations beat buy & hold; 32 of 60 still made money, with a
+median excess of −175.0 points, median Sharpe 0.15 and a median 3% time in
+market. That is the low-exposure trade-off again, not a timing failure by itself.
+
+Only ETH 4h cleared the luck test (p = 0.04), where the best real cell (+18.5%)
+also cleared the best-of-15 random bar (+15.6%). BTC 1d, ETH 1d and BTC 4h did
+not (p = 0.22, 0.40 and 0.34). So the band family has at most a weak,
+market-specific timing signal on this sample, and no case for replacing buy &
+hold. The study is saved to `results/robustness_bollinger.json`; the EMA baseline
+stays in `results/robustness.json`.
 
 ## Walk-forward: does the pick survive the next chunk?
 

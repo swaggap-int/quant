@@ -5,14 +5,16 @@ result generalises, and control for luck with randomly timed entries.
 Examples
 --------
     python run_robustness.py                          # 4 markets x 15 settings + luck test
+    python run_robustness.py --family bollinger        # Bollinger grid, separate output
     python run_robustness.py --quick                   # 3 settings, 50 random schedules
     python run_robustness.py --symbols BTC/USDT --timeframes 1d,4h
     python run_robustness.py --null-runs 0             # breadth only, no luck test
     python run_robustness.py --json --out results/robustness.json
 
-Saving to the default results/robustness.json also refreshes the dashboard's
-frozen breadth read and excess snapshot. Use --no-dashboard-refresh to skip
-that follow-up.
+Saving to the default results/robustness.json (EMA) also refreshes the
+dashboard's frozen breadth read and excess snapshot. A Bollinger sweep
+defaults to results/robustness_bollinger.json and leaves the dashboard
+read alone. Use --no-dashboard-refresh to skip the EMA follow-up.
 
 The report's headline is "beat buy & hold in X% of combinations". The luck test
 is the honest part: it re-runs the same engine on coin-flip entry timing with
@@ -32,16 +34,23 @@ from quant.robustness import (
     DEFAULT_MIN_TRADES,
     DEFAULT_NULL_RUNS,
     Market,
+    SWEEP_FAMILIES,
     default_markets,
-    default_param_grid,
+    param_grid,
     run_study,
-    small_param_grid,
     summarize,
     SweepCell,
     SweepReport,
 )
 
 DEFAULT_OUT = Path(__file__).resolve().parent / "results" / "robustness.json"
+
+
+def default_out(family: str = "ema") -> Path:
+    """The default artifact for one family; EMA keeps the dashboard path."""
+    if family == "ema":
+        return DEFAULT_OUT
+    return DEFAULT_OUT.with_name(f"robustness_{family}.json")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -61,7 +70,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--grid",
         default="default",
         choices=["small", "default"],
-        help="small = 3 settings, default = 15 spanning trend speed and stop width",
+        help="small = 3 settings, default = 15 spanning the family's parameters",
+    )
+    scope.add_argument(
+        "--family",
+        default="ema",
+        choices=SWEEP_FAMILIES,
+        help="strategy family to sweep",
     )
     scope.add_argument(
         "--windows",
@@ -92,7 +107,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     out = p.add_argument_group("output")
     out.add_argument("--json", action="store_true", help="emit the full study JSON to stdout")
-    out.add_argument("--out", default=None, help=f"save the study here (default {DEFAULT_OUT})")
+    out.add_argument(
+        "--out",
+        default=None,
+        help=f"save the study here (default {DEFAULT_OUT} for EMA; per-family otherwise)",
+    )
     out.add_argument("--no-save", action="store_true", help="print only, write nothing")
     out.add_argument("--quiet", action="store_true", help="suppress progress chatter")
     out.add_argument(
@@ -131,7 +150,7 @@ def parse_windows(args: argparse.Namespace, default_start: str | None, default_e
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     markets = parse_markets(args)
-    grid = small_param_grid(args.risk) if args.grid == "small" else default_param_grid(args.risk)
+    grid = param_grid(args.family, args.risk, small=args.grid == "small")
 
     windows = parse_windows(args, default_start="2021-01-01", default_end=None)
 
@@ -167,6 +186,7 @@ def main(argv: list[str] | None = None) -> int:
                     verbose=not args.quiet and not args.json,
                     null_runs=args.null_runs,
                     seed=args.seed,
+                    family=args.family,
                     on_progress=progress,
                 )
             )
@@ -185,22 +205,34 @@ def main(argv: list[str] | None = None) -> int:
         print()
 
     if not args.no_save:
-        path = Path(args.out) if args.out else DEFAULT_OUT
+        path = Path(args.out) if args.out else default_out(args.family)
+        if args.family != "ema" and path.resolve() == DEFAULT_OUT.resolve():
+            print(
+                "error: results/robustness.json is reserved for the EMA sweep; "
+                "choose another --out for the Bollinger study",
+                file=sys.stderr,
+            )
+            return 2
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(merged.to_dict(), indent=2, allow_nan=False), encoding="utf-8")
         if not args.json:
             print(f" saved -> {path}")
 
         if not args.no_dashboard_refresh:
-            if merged.summary["ran"]:
-                refresh_rc = _refresh_dashboard_excess(path, json_mode=args.json)
-                if refresh_rc != 0:
-                    return refresh_rc
-            else:
+            if not merged.summary["ran"]:
                 print(
                     "dashboard refresh skipped: sweep produced no results",
                     file=sys.stderr,
                 )
+            elif args.family != "ema":
+                print(
+                    "dashboard refresh skipped: only the EMA sweep feeds the breadth read",
+                    file=sys.stderr,
+                )
+            else:
+                refresh_rc = _refresh_dashboard_excess(path, json_mode=args.json)
+                if refresh_rc != 0:
+                    return refresh_rc
 
     return 0 if merged.summary["ran"] else 2
 
@@ -268,7 +300,10 @@ def _merge_reports(parts: list[SweepReport]) -> SweepReport:
         "windows": len(parts),
     }
     summary = summarize(cells, nulls, grid_size=parts[0].grid_size, min_trades=parts[0].summary.get("min_trades", DEFAULT_MIN_TRADES))
-    return SweepReport(cells=cells, nulls=nulls, grid_size=parts[0].grid_size, window=window, summary=summary)
+    return SweepReport(
+        cells=cells, nulls=nulls, grid_size=parts[0].grid_size, window=window,
+        summary=summary, family=parts[0].family,
+    )
 
 
 if __name__ == "__main__":

@@ -18,16 +18,21 @@ from quant.config import BacktestConfig, Costs
 from quant.datafeed import DataError
 from quant.robustness import (
     BASELINE_PARAMS,
+    BOLLINGER_BASELINE_PARAMS,
     Market,
     _p_value,
     NullResult,
     RandomEntryStrategy,
     SweepCell,
     SweepReport,
+    bollinger_param_grid,
+    bollinger_small_param_grid,
+    baseline_params,
     default_param_grid,
     expected_max_of_draws,
     format_sweep_report,
     make_strategy,
+    param_grid,
     null_test,
     random_schedule,
     run_study,
@@ -425,6 +430,74 @@ class TestGridsAndLabels(unittest.TestCase):
     def test_a_cell_with_few_trades_is_not_good_however_it_returns(self) -> None:
         generous = SweepCell(market(), dict(BASELINE_PARAMS), metrics=metrics(excess=500.0, trades=2))
         self.assertFalse(generous.good())
+
+    def test_bollinger_default_grid_spans_bands_and_stops(self) -> None:
+        grid = bollinger_param_grid()
+        self.assertEqual(len(grid), 15)
+        self.assertEqual({p["period"] for p in grid}, {20, 30, 50})
+        self.assertEqual({p["atr_stop_mult"] for p in grid}, {2.5, 3.5, 5.0})
+        for params in grid:
+            strategy = make_strategy(params, family="bollinger")
+            self.assertEqual(strategy.period, params["period"])
+            self.assertEqual(strategy.entry_k, params["entry_k"])
+            self.assertEqual(strategy.trend_period, 200)
+            self.assertTrue(strategy.trend_filter)
+        self.assertIn(dict(BOLLINGER_BASELINE_PARAMS), grid)
+
+    def test_bollinger_small_grid_matches_the_walkforward_presets(self) -> None:
+        grid = bollinger_small_param_grid()
+        self.assertEqual(
+            [(p["period"], p["entry_k"], p["atr_stop_mult"]) for p in grid],
+            [(20, 2.0, 2.5), (30, 2.0, 2.5), (50, 2.5, 3.0)],
+        )
+        self.assertTrue(all(p["trend_period"] == 200 for p in grid))
+
+    def test_bollinger_label_reads_as_band_and_stop(self) -> None:
+        self.assertEqual(
+            short_params({"period": 20, "entry_k": 2.0, "atr_stop_mult": 2.5}),
+            "bb20 k2.0 s2.5",
+        )
+
+    def test_param_grid_selects_by_family(self) -> None:
+        self.assertEqual(len(param_grid("ema")), 15)
+        self.assertEqual(len(param_grid("ema", small=True)), 3)
+        self.assertEqual(len(param_grid("bollinger")), 15)
+        self.assertEqual(len(param_grid("bollinger", small=True)), 3)
+        self.assertEqual(baseline_params("bollinger"), dict(BOLLINGER_BASELINE_PARAMS))
+
+
+class TestBollingerSweep(unittest.TestCase):
+    def loader(self):
+        bars = candles(market("AAA/USDT"), n=300)
+        return lambda _m: bars
+
+    def test_sweep_carries_the_family_and_band_labels(self) -> None:
+        report = run_sweep(
+            [market("AAA/USDT")],
+            bollinger_small_param_grid(),
+            base_config=config(),
+            loader=self.loader(),
+            family="bollinger",
+        )
+        self.assertEqual(report.family, "bollinger")
+        self.assertEqual(len(report.cells), 3)
+        self.assertTrue(all("bb" in c.label for c in report.cells))
+        payload = report.to_dict()
+        self.assertEqual(payload["family"], "bollinger")
+        self.assertEqual(payload["cells"][0]["params_label"], "bb20 k2.0 s2.5")
+
+    def test_study_uses_the_bollinger_null_baseline(self) -> None:
+        report = run_study(
+            [market("AAA/USDT")],
+            bollinger_small_param_grid(),
+            base_config=config(),
+            loader=self.loader(),
+            family="bollinger",
+            null_runs=2,
+            seed=1,
+        )
+        self.assertEqual(report.family, "bollinger")
+        self.assertEqual(report.nulls[0].params, dict(BOLLINGER_BASELINE_PARAMS))
 
 
 if __name__ == "__main__":

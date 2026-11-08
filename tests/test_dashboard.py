@@ -840,6 +840,12 @@ class TestRobustnessDashboardRefresh(unittest.TestCase):
     def tearDown(self) -> None:
         self._tmp.cleanup()
 
+    def test_bollinger_default_output_is_separate(self) -> None:
+        import run_robustness
+
+        self.assertEqual(run_robustness.default_out("ema"), run_robustness.DEFAULT_OUT)
+        self.assertEqual(run_robustness.default_out("bollinger").name, "robustness_bollinger.json")
+
     def test_default_output_refreshes_chain_in_order(self) -> None:
         import run_robustness
 
@@ -902,6 +908,35 @@ class TestRobustnessDashboardRefresh(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertEqual(json.loads(output.getvalue()), {"summary": FakeReport.summary})
         refresh.assert_called_once_with(self.default, json_mode=True)
+
+    def test_bollinger_main_skips_ema_dashboard_refresh(self) -> None:
+        import contextlib
+        import io
+        import run_robustness
+
+        class FakeReport:
+            summary = {"ran": 1, "planned": 1}
+            family = "bollinger"
+
+            def to_dict(self) -> dict:
+                return {"family": self.family, "summary": self.summary}
+
+            def __str__(self) -> str:
+                return "fake report"
+
+        output = io.StringIO()
+        errors = io.StringIO()
+        with patch.object(run_robustness, "DEFAULT_OUT", self.default), \
+             patch.object(run_robustness, "run_study", return_value=FakeReport()) as study, \
+             patch.object(run_robustness, "_refresh_dashboard_excess", return_value=0) as refresh:
+            with contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+                rc = run_robustness.main(["--family", "bollinger", "--json", "--quiet"])
+
+        self.assertEqual(rc, 0)
+        self.assertEqual(study.call_args.kwargs["family"], "bollinger")
+        refresh.assert_not_called()
+        self.assertIn("only the EMA sweep", errors.getvalue())
+        self.assertTrue((self.default.parent / "robustness_bollinger.json").exists())
 
     def test_no_dashboard_refresh_skips_refresh(self) -> None:
         import run_robustness
