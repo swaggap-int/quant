@@ -296,6 +296,7 @@ asks whether the result survives being asked again somewhere else.
 ```bash
 python run_robustness.py                              # EMA-ATR, 4 markets x 15 settings + luck test
 python run_robustness.py --family bollinger            # Bollinger reversion, separate output
+python run_robustness.py --compare                     # side-by-side saved EMA vs Bollinger report
 python run_robustness.py --grid small --null-runs 50   # quick version
 python run_robustness.py --json --out results/robustness.json
 python run_robustness.py --windows 2020-01-01,2022-01-01 # same question, two windows
@@ -306,7 +307,9 @@ automatically refreshes the frozen breadth read (`results/explore_notes.json`)
 and the dashboard excess snapshot (`results/dashboard_excess.json`). Use
 `--no-dashboard-refresh` to skip that follow-up; custom `--out` paths are left
 alone. A Bollinger sweep defaults to `results/robustness_bollinger.json` and
-never refreshes the EMA dashboard read.
+never refreshes the EMA dashboard read. `--compare` reads both default
+artifacts and prints one side-by-side headline and per-market table; it does
+not rerun either sweep or touch the dashboard.
 
 It reports three things, in the order they matter:
 

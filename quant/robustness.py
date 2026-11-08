@@ -1056,6 +1056,104 @@ def format_sweep_report(report: SweepReport) -> str:
     return "\n".join(lines)
 
 
+def format_sweep_comparison(
+    ema: dict[str, Any], bollinger: dict[str, Any]
+) -> str:
+    """Read two saved sweep summaries side by side, without re-running them."""
+    es = ema.get("summary")
+    bs = bollinger.get("summary")
+    if not isinstance(es, dict) or not isinstance(bs, dict):
+        raise ValueError("both reports need a summary object")
+
+    window = ema.get("window") or {}
+    b_window = bollinger.get("window") or {}
+    lines: list[str] = []
+    lines.append(_rule(90, "="))
+    lines.append(" ROBUSTNESS COMPARISON  -  EMA-ATR vs Bollinger reversion")
+    lines.append(
+        f" window {_day(window.get('start'))} -> {_day(window.get('end'))}   "
+        f"{ema.get('grid_size', '?')} settings each   "
+        f"{es.get('planned', 0)} + {bs.get('planned', 0)} cells"
+    )
+    lines.append(
+        f" costs fee {window.get('fee_bps', 'n/a')}bps + slip "
+        f"{window.get('slippage_bps', 'n/a')}bps per side   "
+        f"min trades to count {es.get('min_trades', 'n/a')}"
+    )
+    if (_day(window.get("start")), _day(window.get("end"))) != (
+        _day(b_window.get("start")), _day(b_window.get("end"))
+    ):
+        lines.append(
+            f" note: EMA window {_day(window.get('start'))} -> {_day(window.get('end'))}; "
+            f"Bollinger window {_day(b_window.get('start'))} -> {_day(b_window.get('end'))}"
+        )
+    lines.append(_rule(90, "="))
+    lines.append(" HEADLINE")
+    lines.append(
+        f"  {'family':<22}{'cells':>7}{'beat b&h':>11}"
+        f"{'median excess':>15}{'median Sharpe':>15}{'trades':>9}{'luck p':>9}"
+    )
+    for label, s in (("EMA-ATR", es), ("Bollinger reversion", bs)):
+        beat = (
+            f"{int(s.get('beat_buy_hold', 0))} "
+            f"({float(s.get('beat_buy_hold_pct', 0.0)):.0f}%)"
+        )
+        lines.append(
+            f"  {label:<22}{int(s.get('ran', 0)):>3}/{int(s.get('planned', 0)):<3}"
+            f"{beat:>11}"
+            f"{_pct(float(s.get('median_excess_pct', 0.0))):>15}"
+            f"{_num(s.get('median_sharpe'), 2):>15}"
+            f"{int(s.get('total_trades', 0)):>9}"
+            f"{_num(s.get('median_p_value'), 2):>9}"
+        )
+
+    lines.append(" BY MARKET")
+    lines.append(
+        f"  {'market':<16}{'EMA beat':>10}{'EMA excess':>13}{'EMA p':>8}"
+        f"{'BOLL beat':>12}{'BOLL excess':>14}{'BOLL p':>8}"
+    )
+
+    def market_rows(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
+        return {
+            str(row.get("market")): row
+            for row in (payload.get("summary") or {}).get("by_market", [])
+            if isinstance(row, dict)
+        }
+
+    ema_rows = market_rows(ema)
+    boll_rows = market_rows(bollinger)
+    markets = list(ema_rows) + [m for m in boll_rows if m not in ema_rows]
+
+    def beat(row: dict[str, Any] | None) -> str:
+        if not row:
+            return "—"
+        return f"{int(row.get('beat_buy_hold', 0))}/{int(row.get('ran', row.get('cells', 0)))}"
+
+    def excess(row: dict[str, Any] | None) -> str:
+        if not row or row.get("median_excess_pct") is None:
+            return "—"
+        return _pct(float(row["median_excess_pct"]))
+
+    def p_value(row: dict[str, Any] | None) -> str:
+        return "n/a" if not row else _num(row.get("p_value"), 2)
+
+    for market in markets:
+        er = ema_rows.get(market)
+        br = boll_rows.get(market)
+        lines.append(
+            f"  {market:<16}{beat(er):>10}{excess(er):>13}"
+            f"{p_value(er):>8}"
+            f"{beat(br):>12}{excess(br):>14}"
+            f"{p_value(br):>8}"
+        )
+
+    lines.append(
+        "  p is the share of random schedules that matched or beat the signal; lower is better."
+    )
+    lines.append(_rule(90, "="))
+    return "\n".join(lines)
+
+
 def _summary_block(s: dict[str, Any]) -> list[str]:
     lines = [" HOW OFTEN WAS IT GOOD?"]
     lines.append(f"  runs completed          {s['ran']:>5} / {s['planned']}   ({s['completed_pct']:.0f}%)")

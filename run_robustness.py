@@ -6,6 +6,7 @@ Examples
 --------
     python run_robustness.py                          # 4 markets x 15 settings + luck test
     python run_robustness.py --family bollinger        # Bollinger grid, separate output
+    python run_robustness.py --compare                 # side-by-side saved EMA vs Bollinger
     python run_robustness.py --quick                   # 3 settings, 50 random schedules
     python run_robustness.py --symbols BTC/USDT --timeframes 1d,4h
     python run_robustness.py --null-runs 0             # breadth only, no luck test
@@ -27,6 +28,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 from quant.config import BacktestConfig, Costs, RiskConfig
 from quant.datafeed import PROVIDERS, DataError
@@ -36,6 +38,7 @@ from quant.robustness import (
     Market,
     SWEEP_FAMILIES,
     default_markets,
+    format_sweep_comparison,
     param_grid,
     run_study,
     summarize,
@@ -113,6 +116,11 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"save the study here (default {DEFAULT_OUT} for EMA; per-family otherwise)",
     )
     out.add_argument("--no-save", action="store_true", help="print only, write nothing")
+    out.add_argument(
+        "--compare",
+        action="store_true",
+        help="read the default EMA and Bollinger artifacts and print a side-by-side report",
+    )
     out.add_argument("--quiet", action="store_true", help="suppress progress chatter")
     out.add_argument(
         "--no-dashboard-refresh",
@@ -149,6 +157,8 @@ def parse_windows(args: argparse.Namespace, default_start: str | None, default_e
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.compare:
+        return _compare_saved_sweeps(args)
     markets = parse_markets(args)
     grid = param_grid(args.family, args.risk, small=args.grid == "small")
 
@@ -271,6 +281,59 @@ def _refresh_dashboard_excess(out_path: Path, *, json_mode: bool) -> int:
     if rc != 0:
         print(f"error: {stage} failed ({rc})", file=sys.stderr)
     return rc
+
+
+def _load_saved_sweep(path: Path) -> dict[str, Any]:
+    """Load one completed sweep artifact for comparison, without re-running it."""
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise ValueError(f"cannot read {path}: {exc}") from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"invalid JSON in {path}: {exc}") from exc
+    if not isinstance(payload, dict) or not isinstance(payload.get("summary"), dict):
+        raise ValueError(f"{path} is not a robustness sweep artifact")
+    return payload
+
+
+def _compare_saved_sweeps(args: argparse.Namespace) -> int:
+    """Print the EMA and Bollinger sweeps side by side from their default artifacts."""
+    paths = {"ema": default_out("ema"), "bollinger": default_out("bollinger")}
+    missing = [str(path) for path in paths.values() if not path.exists()]
+    if missing:
+        print(
+            f"error: missing saved sweep(s): {', '.join(missing)}; run "
+            "`python run_robustness.py` and `python run_robustness.py --family bollinger` first",
+            file=sys.stderr,
+        )
+        return 2
+    try:
+        ema = _load_saved_sweep(paths["ema"])
+        bollinger = _load_saved_sweep(paths["bollinger"])
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    if args.json:
+        payload = {
+            "study": "robustness_comparison",
+            "ema": {
+                "family": "ema",
+                "window": ema.get("window"),
+                "grid_size": ema.get("grid_size"),
+                "summary": ema.get("summary"),
+            },
+            "bollinger": {
+                "family": "bollinger",
+                "window": bollinger.get("window"),
+                "grid_size": bollinger.get("grid_size"),
+                "summary": bollinger.get("summary"),
+            },
+        }
+        print(json.dumps(payload, indent=2, allow_nan=False))
+    else:
+        print(format_sweep_comparison(ema, bollinger))
+    return 0
 
 
 def _progress(message: str) -> None:

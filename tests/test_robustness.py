@@ -30,6 +30,7 @@ from quant.robustness import (
     baseline_params,
     default_param_grid,
     expected_max_of_draws,
+    format_sweep_comparison,
     format_sweep_report,
     make_strategy,
     param_grid,
@@ -498,6 +499,51 @@ class TestBollingerSweep(unittest.TestCase):
         )
         self.assertEqual(report.family, "bollinger")
         self.assertEqual(report.nulls[0].params, dict(BOLLINGER_BASELINE_PARAMS))
+
+
+class TestSweepComparison(unittest.TestCase):
+    def payload(self, family, excess, sharpe, trades, p):
+        return {
+            "family": family,
+            "grid_size": 15,
+            "window": {"start": "2021-01-01", "end": "2026-11-08", "fee_bps": 10.0, "slippage_bps": 5.0},
+            "summary": {
+                "planned": 15,
+                "ran": 15,
+                "beat_buy_hold": 2,
+                "beat_buy_hold_pct": 13.333,
+                "median_excess_pct": excess,
+                "median_sharpe": sharpe,
+                "total_trades": trades,
+                "median_p_value": p,
+                "by_market": [
+                    {
+                        "market": "BTC/USDT 1d",
+                        "ran": 15,
+                        "beat_buy_hold": 2,
+                        "median_excess_pct": excess,
+                        "p_value": p,
+                    }
+                ],
+            },
+        }
+
+    def test_side_by_side_report_has_both_families_and_markets(self) -> None:
+        text = format_sweep_comparison(
+            self.payload("ema", -146.6, 0.49, 4086, 0.08),
+            self.payload("bollinger", -175.0, 0.15, 1571, 0.28),
+        )
+        self.assertIn("ROBUSTNESS COMPARISON", text)
+        self.assertIn("EMA-ATR", text)
+        self.assertIn("Bollinger reversion", text)
+        self.assertIn("BTC/USDT 1d", text)
+        self.assertIn("2/15", text)
+        self.assertIn("-146.6%", text)
+        self.assertIn("-175.0%", text)
+        self.assertIn("0.08", text)
+        self.assertIn("0.28", text)
+        self.assertNotIn("note:", text)
+        self.assertLess(text.index("EMA-ATR"), text.index("Bollinger reversion"))
 
 
 if __name__ == "__main__":

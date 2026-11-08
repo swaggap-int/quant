@@ -909,6 +909,44 @@ class TestRobustnessDashboardRefresh(unittest.TestCase):
         self.assertEqual(json.loads(output.getvalue()), {"summary": FakeReport.summary})
         refresh.assert_called_once_with(self.default, json_mode=True)
 
+    def test_compare_reads_both_default_artifacts(self) -> None:
+        import contextlib
+        import io
+        import run_robustness
+
+        def payload(family, excess, p):
+            return {
+                "family": family,
+                "grid_size": 15,
+                "window": {"start": "2021-01-01", "end": "2026-11-08", "fee_bps": 10.0, "slippage_bps": 5.0},
+                "summary": {
+                    "planned": 15,
+                    "ran": 15,
+                    "beat_buy_hold": 0,
+                    "beat_buy_hold_pct": 0.0,
+                    "median_excess_pct": excess,
+                    "median_sharpe": 0.1,
+                    "total_trades": 100,
+                    "median_p_value": p,
+                    "by_market": [{"market": "BTC/USDT 1d", "ran": 15, "beat_buy_hold": 0, "median_excess_pct": excess, "p_value": p}],
+                },
+            }
+
+        self.default.write_text(json.dumps(payload(None, -146.6, 0.08)), encoding="utf-8")
+        (self.default.parent / "robustness_bollinger.json").write_text(
+            json.dumps(payload("bollinger", -175.0, 0.28)), encoding="utf-8"
+        )
+        output = io.StringIO()
+        with patch.object(run_robustness, "DEFAULT_OUT", self.default):
+            with contextlib.redirect_stdout(output):
+                rc = run_robustness.main(["--compare"])
+
+        self.assertEqual(rc, 0)
+        text = output.getvalue()
+        self.assertIn("EMA-ATR", text)
+        self.assertIn("Bollinger reversion", text)
+        self.assertIn("BTC/USDT 1d", text)
+
     def test_bollinger_main_skips_ema_dashboard_refresh(self) -> None:
         import contextlib
         import io
