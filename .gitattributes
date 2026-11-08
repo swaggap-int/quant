@@ -4,3 +4,4 @@
 quant/dashboard/** text eol=lf
 serve_dashboard.py text eol=lf
 tests/test_dashboard*.py text eol=lf
+quant/build_dashboard_excess.py text eol=lf
