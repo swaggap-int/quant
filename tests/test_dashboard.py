@@ -897,3 +897,80 @@ class TestRobustnessDashboardRefresh(unittest.TestCase):
 
         self.assertEqual(rc, 0)
         refresh.assert_not_called()
+
+
+class TestFrozenReadPaperExcess(unittest.TestCase):
+    """The frozen read uses the active paper value without inventing a cross-check."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.results = self.root / "results"
+        self.results.mkdir()
+        self.robustness = self.results / "robustness.json"
+        self.out = self.results / "explore_notes.json"
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def _write_sweep(self, paper_excess: float | None = None) -> None:
+        summary: dict[str, object] = {
+            "planned": 1,
+            "ran": 1,
+            "median_excess_pct": -140.0,
+            "by_market": [],
+            "best": {},
+            "verdict": "",
+        }
+        if paper_excess is not None:
+            summary["paper_excess_pct"] = paper_excess
+        write(self.results, "robustness.json", {"summary": summary, "cells": [], "nulls": []})
+
+    def _run(self) -> int:
+        import quant.regenerate_frozen_reads as regen
+
+        with patch.object(regen, "ROOT", self.root), \
+             patch.object(regen, "ROBUSTNESS", self.robustness), \
+             patch.object(regen, "OUT", self.out):
+            return regen.main()
+
+    def test_latest_metrics_value_is_recorded_without_a_fake_cross_check(self) -> None:
+        self._write_sweep()
+        write(self.results, "status.json", {
+            "paper": {"latest_metrics": {"excess_return_pct": -161.59403890969705}}
+        })
+
+        self.assertEqual(self._run(), 0)
+        breadth = json.loads(self.out.read_text(encoding="utf-8"))["breadth_read"]
+        self.assertEqual(breadth["paper_excess_pct"], -161.59403890969705)
+        self.assertIsNone(breadth["paper_excess_from_sweep"])
+        self.assertFalse(breadth["paper_excess_cross_checked_against_sweep"])
+
+    def test_legacy_top_level_paper_excess_still_reads(self) -> None:
+        self._write_sweep()
+        write(self.results, "status.json", {"paper": {"excess_return_pct": -12.5}})
+
+        self.assertEqual(self._run(), 0)
+        breadth = json.loads(self.out.read_text(encoding="utf-8"))["breadth_read"]
+        self.assertEqual(breadth["paper_excess_pct"], -12.5)
+        self.assertFalse(breadth["paper_excess_cross_checked_against_sweep"])
+
+    def test_explicit_sweep_value_is_cross_checked(self) -> None:
+        self._write_sweep(paper_excess=-161.59403890969705)
+        write(self.results, "status.json", {
+            "paper": {"latest_metrics": {"excess_return_pct": -161.59403890969705}}
+        })
+
+        self.assertEqual(self._run(), 0)
+        breadth = json.loads(self.out.read_text(encoding="utf-8"))["breadth_read"]
+        self.assertEqual(breadth["paper_excess_from_sweep"], -161.59403890969705)
+        self.assertTrue(breadth["paper_excess_cross_checked_against_sweep"])
+
+    def test_mismatched_sweep_value_fails(self) -> None:
+        self._write_sweep(paper_excess=-1.0)
+        write(self.results, "status.json", {
+            "paper": {"latest_metrics": {"excess_return_pct": -161.59403890969705}}
+        })
+
+        with self.assertRaises(AssertionError):
+            self._run()

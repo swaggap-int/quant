@@ -551,8 +551,8 @@ tried.
 `results/dashboard_excess.json` is a frozen read of two separate frozen sources:
 
 - `results/status.json` gives a **single-paper** reading. Its
-  `paper.excess_return_pct` is the active paper artifact's **single-window**
-  excess for that one backtest run. It is **not** a sweep result.
+  `paper.latest_metrics.excess_return_pct` is the active paper artifact's
+  **single-window** excess for that one backtest run. It is **not** a sweep result.
 - `results/explore_notes.json` gives a **swept** reading under `breadth`.
   Its `breadth.median_excess_pct` is the **median across the swept cells**.
 
@@ -594,9 +594,12 @@ the dashboard or the sweep.
 
 These are not two readings of the same number. One is a single run; the other is a
 median over many runs, many settings and many markets. They are allowed to disagree.
-The frozen-read step in the supported chain (`quant/regenerate_frozen_reads.py`) does
-still cross-check the sweep's equivalent field against the active paper artifact before
-it refreshes `results/explore_notes.json`, but the excess builder does **not** assert
+The frozen-read step in the supported chain (`quant/regenerate_frozen_reads.py`) reads
+the active paper value from `status.paper.latest_metrics.excess_return_pct` (falling
+back to the older `status.paper.excess_return_pct` shape). `results/robustness.json`
+is a multi-cell summary without an equivalent single-paper field, so it records
+`paper_excess_from_sweep` as null and marks the value cross-checked only when the
+sweep explicitly supplies `paper_excess_pct`. The excess builder does **not** assert
 `paper.excess_return_pct == breadth.median_excess_pct`, because that would equate a
 single-window reading with a sweep median by construction.
 

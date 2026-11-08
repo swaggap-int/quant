@@ -32,7 +32,34 @@ from quant.config import timeframe_ms
 CACHE_DIR = Path(__file__).resolve().parent.parent / "data" / "cache"
 USER_AGENT = "quant-backtest/0.1 (+https://localhost)"
 MAX_RETRIES = 4
-_SSL_CTX = ssl.create_default_context()
+
+
+def _ssl_context() -> ssl.SSLContext:
+    """Build a CA-backed TLS context even when the venv ships no CA bundle.
+
+    Python builds on macOS can point OpenSSL at a non-existent default
+    certificate file. Fall back to the host CA bundle, then certifi when
+    present, so provider fetches fail on the network rather than on trust.
+    """
+    context = ssl.create_default_context()
+    if context.get_ca_certs():
+        return context
+
+    for cafile in ("/etc/ssl/cert.pem", "/etc/ssl/certs/ca-certificates.crt"):
+        if Path(cafile).is_file():
+            try:
+                return ssl.create_default_context(cafile=cafile)
+            except (OSError, ssl.SSLError):
+                continue
+
+    try:
+        import certifi
+    except ImportError:
+        return context
+    return ssl.create_default_context(cafile=certifi.where())
+
+
+_SSL_CTX = _ssl_context()
 
 
 class DataError(RuntimeError):

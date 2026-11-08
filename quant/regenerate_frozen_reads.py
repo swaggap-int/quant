@@ -12,9 +12,9 @@ brought in sync, re-run the chain in order.
 
 Note on paper.excess_return_pct: it is the active paper artifact's
 single-window excess. results/robustness.json is a multi-cell sweep
-summary and does carry an equivalent single-paper excess field, so this
-frozen-read step does cross-check paper.excess_return_pct against the
-sweep before writing the refreshed explore_notes.json.breadth_read.
+summary and does not carry an equivalent single-paper excess field.
+This step records the active paper value; it only marks it as
+cross-checked when the sweep explicitly supplies paper_excess_pct.
 """
 from __future__ import annotations
 
@@ -102,30 +102,34 @@ def main() -> int:
             "p_value": n.get("p_value"),
         })
 
-    # Re-read the paper block from the sweep so the refreshed breadth_read's
-    # paper.excess_return_pct is cross-checked against the sweep. The builder
-    # writes paper.excess_return_pct from results/status.json, but the
-    # frozen-read step is where we confirm the sweep agrees with the active
-    # paper artifact before anything is published.
+    # Read the active paper value from the current status shape. Older status
+    # files kept it at paper.excess_return_pct; newer ones put it under
+    # paper.latest_metrics. Do not silently substitute zero: that is how the
+    # old cross-check became 0.0 == 0.0.
     status = load(ROOT / "results" / "status.json")
     paper_block = status.get("paper", {})
     if not isinstance(paper_block, dict):
         paper_block = {}
-    paper_excess = paper_block.get("excess_return_pct")
-    if paper_excess is None:
-        paper_excess = 0.0
-    paper_excess = float(paper_excess)
+    latest_metrics = paper_block.get("latest_metrics")
+    paper_excess_raw = None
+    if isinstance(latest_metrics, dict):
+        paper_excess_raw = latest_metrics.get("excess_return_pct")
+    if paper_excess_raw is None:
+        paper_excess_raw = paper_block.get("excess_return_pct")
+    paper_excess = float(paper_excess_raw) if paper_excess_raw is not None else 0.0
 
-    # The sweep does carry an equivalent single-paper excess field now, so
-    # we can assert a live cross-check here.
-    paper_from_sweep = summary.get("paper_excess_pct")
-    if paper_from_sweep is None:
-        paper_from_sweep = paper_excess
-    paper_from_sweep = float(paper_from_sweep)
-    assert abs(paper_excess - paper_from_sweep) < 1e-6, (
-        f"active paper artifact excess ({paper_excess}) does not match sweep "
-        f"paper_excess_pct ({paper_from_sweep}); stale or wrong paper source"
-    )
+    # The sweep is multi-cell and normally has no single-paper excess. Only
+    # claim a cross-check when that field is explicitly present.
+    paper_from_sweep_raw = summary.get("paper_excess_pct")
+    paper_cross_checked = paper_from_sweep_raw is not None
+    if paper_cross_checked:
+        paper_from_sweep = float(paper_from_sweep_raw)
+        assert abs(paper_excess - paper_from_sweep) < 1e-6, (
+            f"active paper artifact excess ({paper_excess}) does not match sweep "
+            f"paper_excess_pct ({paper_from_sweep}); stale or wrong paper source"
+        )
+    else:
+        paper_from_sweep = None
 
     breadth_read = {
         "planned": planned,
@@ -143,7 +147,7 @@ def main() -> int:
         "null_tests": null_tests,
         "paper_excess_pct": paper_excess,
         "paper_excess_from_sweep": paper_from_sweep,
-        "paper_excess_cross_checked_against_sweep": True,
+        "paper_excess_cross_checked_against_sweep": paper_cross_checked,
         "interpretation": rb.get("summary", {}).get("verdict", "") or "",
         "next_question": "Is the excess problem the same everywhere, or is there a better market/timeframe/setting shape worth chasing next?",
     }
@@ -170,8 +174,12 @@ def main() -> int:
     print(f"  breadth_read.best_cell: {best_cell}")
     print(f"  null_tests: {len(null_tests)}")
     print(f"  paper_excess_pct from active paper artifact: {paper_excess}")
-    print(f"  paper_excess_pct from sweep: {paper_from_sweep}")
-    print(f"  paper_excess_cross_checked_against_sweep: true")
+    if paper_cross_checked:
+        print(f"  paper_excess_pct from sweep: {paper_from_sweep}")
+        print("  paper_excess_cross_checked_against_sweep: true")
+    else:
+        print("  paper_excess_from_sweep: unavailable (multi-cell sweep)")
+        print("  paper_excess_cross_checked_against_sweep: false")
     return 0
 
 

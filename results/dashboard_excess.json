@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-08T02:43:22Z",
+  "generated": "2026-11-08T03:10:41Z",
   "based_on": "results/status.json + results/explore_notes.json (frozen breadcrumb from the current sweep)",
   "paper": {
     "symbol": "BTCUSDT",

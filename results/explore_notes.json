@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-21T23:15:59Z",
+  "generated": "2026-11-08T03:10:41Z",
   "based_on": "results/robustness.json (refreshed after sweep re-run)",
   "current_sweep_closed": true,
   "breadth_read": {
@@ -82,9 +82,9 @@
         "p_value": 0.03980099502487562
       }
     ],
-    "paper_excess_pct": 0.0,
-    "paper_excess_from_sweep": 0.0,
-    "paper_excess_cross_checked_against_sweep": true,
+    "paper_excess_pct": -161.59403890969705,
+    "paper_excess_from_sweep": null,
+    "paper_excess_cross_checked_against_sweep": false,
     "interpretation": "It beat buy & hold in only 0% of the 60 combinations (median excess -170.0 points). As a way to beat simply holding, it does not work on any market or setting tested here \u2014 which is what a low-exposure system looks like in a market that mostly rose. Not one cell produced positive excess to concentrate. Random entries drawing the same number of trades, holding times, size, stops and costs matched or beat it only 9% of the time (median across markets), so the timing carries information. Both readings hold at once: the entries carry information against random timing, but a system that is flat most of the time still trails buy & hold in a market that rose. Judge it on risk-adjusted terms, not on headline return.",
     "next_question": "Is the excess problem the same everywhere, or is there a better market/timeframe/setting shape worth chasing next?"
   },

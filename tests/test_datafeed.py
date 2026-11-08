@@ -15,6 +15,7 @@ from quant.datafeed import (
     DataError,
     KrakenProvider,
     OkxProvider,
+    _SSL_CTX,
     _build,
     load_candles,
     merge_candles,
@@ -71,6 +72,15 @@ class TestDateParsing(unittest.TestCase):
     def test_bad_input_raises(self) -> None:
         with self.assertRaises(ValueError):
             parse_date("last tuesday")
+
+
+class TestTLSContext(unittest.TestCase):
+    def test_default_context_has_trusted_roots(self) -> None:
+        self.assertGreater(
+            len(_SSL_CTX.get_ca_certs()),
+            0,
+            "no CA roots loaded; provider fetches would fail TLS verification",
+        )
 
 
 class TestSymbolMapping(unittest.TestCase):
