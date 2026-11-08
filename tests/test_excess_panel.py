@@ -225,8 +225,8 @@ def test_excess_panel_renders_from_dashboard_excess_json() -> None:
                     assert panel["excessFees"] == "+0.96%", panel
                     assert "17 trades" in panel["excessSub"], panel
                     assert panel["breadthPlanned"] == "60 planned · 60 ran", panel
-                    assert panel["breadthBeat"] == "-0.00%", panel
-                    assert panel["breadthClean"] == "-0.00%", panel
+                    assert panel["breadthBeat"] == "0.00%", panel
+                    assert panel["breadthClean"] == "0.00%", panel
                     assert panel["breadthMedianExcess"] == "-166.36%", panel
                     assert panel["breadthMedianReturn"] == "+18.78%", panel
                     assert panel["breadthMedianSharpe"] == "0.50", panel
@@ -317,6 +317,44 @@ def test_excess_panel_stays_closed_when_sources_are_missing() -> None:
         finally:
             httpd.shutdown()
             httpd.server_close()
+
+
+def test_excess_dialog_close_buttons_close_it() -> None:
+    """Both close affordances dismiss the modal.
+
+    The footer's "Got it" button and the header's "Close" button must both
+    call dialog.close(); a missing handler would leave the panel stuck open.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_dir = Path(tmp)
+        payload = _payload()
+        _seed(tmp_dir, payload)
+
+        httpd, (host, port) = _run_server(tmp_dir, "127.0.0.1", 0)
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                try:
+                    page = browser.new_page()
+                    errors = _open(page, host, port)
+
+                    _open_excess_dialog(page)
+                    page.wait_for_timeout(300)
+                    expect(page.locator("#excessDone")).to_be_visible(timeout=3000)
+                    page.locator("#excessDone").click()
+                    expect(page.locator("#excessPanel")).to_be_hidden(timeout=3000)
+
+                    _open_excess_dialog(page)
+                    expect(page.locator("#excessClose")).to_be_visible(timeout=3000)
+                    page.locator("#excessClose").click()
+                    expect(page.locator("#excessPanel")).to_be_hidden(timeout=3000)
+                finally:
+                    browser.close()
+        finally:
+            httpd.shutdown()
+            httpd.server_close()
+
+    assert not errors, errors
 
 
 if __name__ == "__main__":

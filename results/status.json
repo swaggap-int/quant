@@ -1,6 +1,6 @@
 {
   "paper": {
-    "latest_active": "C:/Users/HP/Desktop/quant/results/paper/BTCUSDT_1d_ema-atr-trend_20261016T100000Z.json",
+    "latest_active": "results/paper/BTCUSDT_1d_ema-atr-trend_20261016T100000Z.json",
     "latest_metrics": {
       "symbol": "BTCUSDT",
       "timeframe": "1d",

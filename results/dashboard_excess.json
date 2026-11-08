@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-21T23:17:54Z",
+  "generated": "2026-11-08T02:43:22Z",
   "based_on": "results/status.json + results/explore_notes.json (frozen breadcrumb from the current sweep)",
   "paper": {
     "symbol": "BTCUSDT",
@@ -109,7 +109,7 @@
     "breadth_median_value": -170.00504323926623,
     "robustness_median_excess_pct": -170.00504323926623,
     "paper_excess_value": -161.59403890969705,
-    "paper_excess_source": "C:\\Users\\HP\\Desktop\\quant\\results\\paper\\BTCUSDT_1d_ema-atr-trend_20261016T100000Z.json",
+    "paper_excess_source": "/Users/danny/quant/results/paper/BTCUSDT_1d_ema-atr-trend_20261016T100000Z.json",
     "paper_excess_source_exists": true,
     "paper_excess_source_matches_active_artifact": true,
     "paper_excess_from_status_reading": true,

@@ -379,7 +379,7 @@
     padding-bottom: 16px; margin-bottom: 20px;
     border-bottom: 1px solid var(--line);
   }
-  .runpick { display: none; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); flex: 1 1 auto; }
+  .runpick { display: none; align-items: center; gap: 8px; min-width: 0; font-size: 12.5px; color: var(--muted); flex: 1 1 auto; }
   .chartctl { display: none; }
   .runpick select { flex: 1 1 auto; min-width: 0; }
   .topactions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
@@ -434,6 +434,10 @@
      would push the whole page sideways. Both blocks are allowed to shrink and
      wrap instead — that is what keeps the top bar and the grid on screen. */
   .masthead > * { min-width: 0; }
+  /* Flex lines break before items shrink, so a max-content-wide title block
+     would push the summary onto its own row even on a desktop. A basis lets
+     the title grow while keeping both ends on one row until space runs out. */
+  .masthead > *:first-child { flex: 1 1 440px; }
   .masthead h1 {
     margin: 0; font-size: clamp(26px, 3.4vw, 36px);
     font-weight: 650; letter-spacing: -.025em; line-height: 1.05;
@@ -907,7 +911,7 @@
     .rail > .papergroup { width: 100%; }
     .rail .railh { padding: 0; margin-bottom: 6px; }
     .papercard { padding: 9px 11px; }
-    .runpick { display: flex; flex: 1 1 100%; }
+    .runpick { display: flex; flex: 1 1 100%; min-width: 0; }
     .topbar { flex-wrap: wrap; gap: 10px; }
     .topactions { margin-left: auto; }
     select { min-width: 0; }
@@ -1164,13 +1168,9 @@
           <span class="grp"><kbd>j</kbd><kbd>k</kbd>previous / next run</span>
           <span class="grp"><kbd>b</kbd>best setting</span>
           <span class="grp"><kbd>B</kbd>robustness sweep</span>
-          <span class="grp"><kbd>b</kbd>best setting</span>
-          <span class="grp"><kbd>B</kbd>robustness sweep</span>
           <span class="grp"><kbd>Esc</kbd>clear</span>
           <span class="grp"><kbd>y</kbd>copy bar</span>
-          <span class="grp"><kbd>b</kbd>best setting</span>
           <span class="grp"><kbd>?</kbd>guide</span>
-          <span class="grp"><kbd>B</kbd>robustness sweep</span>
         </p>
       </section>
 
@@ -1442,6 +1442,7 @@
           <span class="hint">This panel reads <code>results/dashboard_excess.json</code> from disk.</span>
         </div>
       </div>
+    </dialog>
 <script>
 "use strict";
 
@@ -1498,7 +1499,9 @@ const fmt = {
   },
   signedPct(v, dp = 2) {
     if (!isFinite(v)) return "–";
-    return (v > 0 ? "+" : "-") + Math.abs(v).toFixed(dp) + "%";
+    const abs = Math.abs(v).toFixed(dp);
+    // A value that rounds to zero is zero: "+/-0.00%" reads as a real sign.
+    return (Number(abs) === 0 ? "" : v > 0 ? "+" : "-") + abs + "%";
   },
   pct(v, dp = 2) {
     if (!isFinite(v)) return "–";
@@ -3216,7 +3219,9 @@ function toggleExcess() {
 
 $("openExcess").addEventListener("click", toggleExcess);
 $("openExcessAlt").addEventListener("click", toggleExcess);
-$("excessClose").addEventListener("click", () => $("excessPanel").close());
+const closeExcess = () => $("excessPanel").close();
+$("excessClose").addEventListener("click", closeExcess);
+$("excessDone").addEventListener("click", closeExcess);
 
 let resizeTimer = null;
 new ResizeObserver(() => {
