@@ -18,6 +18,7 @@ from quant.config import BacktestConfig
 from run_walkforward import (
     KEEP_STUDIES,
     build_parser,
+    candidate_rows,
     main,
     fold_windows,
     prune_studies,
@@ -114,6 +115,41 @@ def test_verdict_reads_like_plain_language_not_a_score() -> None:
     # A family that rarely beats the benchmark but usually earns more per unit
     # of drawdown is described as lower risk, not as a failure.
     assert "lower-risk path" in verdict_for(1, 4, risk_beat=4, risk_windows=4)
+
+
+def test_bollinger_is_the_default_family_and_has_three_candidates() -> None:
+    args = build_parser().parse_args([])
+    assert args.family == "bollinger"
+
+    candidates = candidate_rows("bollinger")
+    assert len(candidates) == 3
+    assert [label for label, _ in candidates] == ["bb20 k2.0", "bb30 k2.0", "bb50 k2.5"]
+    assert all(build().__class__.__name__ == "BollingerReversion" for _, build in candidates)
+
+
+def test_bollinger_family_runs_end_to_end_on_synthetic_bars() -> None:
+    rows = []
+    price = 100.0
+    for i in range(1_500):
+        drift = 0.35 if (i // 120) % 2 == 0 else -0.25
+        price = max(5.0, price + drift)
+        rows.append((price, price + 1.5, price - 1.5, price + (0.2 if i % 2 else -0.2), 1.0))
+
+    out = run_symbol(
+        BacktestConfig(symbol="TEST/USDT", timeframe="1d"),
+        candles_from(rows),
+        folds=3,
+        families=["bollinger"],
+    )
+
+    family = out["families"]["bollinger"]
+    assert family["windows"] == 2
+    assert len(family["rows"]) == 2
+    for row in family["rows"]:
+        assert row["train_start"] < row["test_start"]
+        assert row["best_test_ret"] >= row["test_ret"]
+        assert row["regret"] <= 0.0
+    assert family["verdict"]
 
 
 def test_risk_adjustment_ignores_meaningless_drawdowns() -> None:

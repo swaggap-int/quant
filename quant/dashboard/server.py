@@ -47,7 +47,7 @@ DEFAULT_PAPER_DIR = DEFAULT_RESULTS_DIR / "paper"
 PAPER_RUN_LIMIT = 5
 
 WALKFORWARD_GLOB = "walkforward_rolling_*.json"
-FAMILY_LABELS = {"ema": "EMA-ATR", "donchian": "Donchian"}
+FAMILY_LABELS = {"bollinger": "Bollinger reversion", "ema": "EMA-ATR", "donchian": "Donchian"}
 WALKFORWARD_TIMEOUT_SECONDS = 600
 
 #: One study at a time: two runs would race on the same output file.
@@ -579,9 +579,9 @@ def build_walkforward_command(
     if not 3 <= folds <= 10:
         raise BadRequest("folds must be between 3 and 10")
 
-    family = str(payload.get("family", "both"))
-    if family not in ("ema", "donchian", "both"):
-        raise BadRequest("family must be ema, donchian or both")
+    family = str(payload.get("family", "bollinger"))
+    if family not in ("bollinger", "ema", "donchian", "both"):
+        raise BadRequest("family must be bollinger, ema, donchian or both")
 
     raw_symbols = str(payload.get("symbols", "BTC/USDT,ETH/USDT"))
     symbols = [part.strip().upper() for part in raw_symbols.split(",") if part.strip()]

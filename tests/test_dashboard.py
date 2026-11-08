@@ -472,7 +472,7 @@ class TestWalkforwardRun(unittest.TestCase):
         self.assertIn("--symbols BTC/USDT,ETH/USDT", joined)
         self.assertIn("--timeframe 4h", joined)
         self.assertIn("--folds 5", joined)
-        self.assertIn("--family both", joined)
+        self.assertIn("--family bollinger", joined)
 
     def test_a_start_date_is_forwarded(self) -> None:
         joined = " ".join(build_walkforward_command({"start": "2022-01-01"}))

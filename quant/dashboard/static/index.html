@@ -2552,7 +2552,8 @@ function wfStat(num, den, label) {
 const WF_TIMEFRAMES = ["4h", "1d"];
 const WF_FOLDS = [3, 4, 5, 6];
 const WF_FAMILIES = [
-  { value: "both", label: "Both" },
+  { value: "bollinger", label: "Bollinger reversion" },
+  { value: "both", label: "EMA + Donchian" },
   { value: "ema", label: "EMA-ATR" },
   { value: "donchian", label: "Donchian" },
 ];
@@ -2763,7 +2764,7 @@ async function runWalkforward() {
   }
 
   const payload = {
-    family: $("wfFamily").value || "both",
+    family: $("wfFamily").value || "bollinger",
     symbols: markets.join(","),
   };
   const timeframe = $("wfTimeframe").value;

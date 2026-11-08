@@ -1,0 +1,543 @@
+{
+  "study": "rolling_walkforward",
+  "timeframe": "4h",
+  "folds": 5,
+  "families": [
+    "bollinger"
+  ],
+  "note": "Each chunk picks parameters on the chunk immediately before it and is judged on the next, never-seen chunk. Picks use train return only; test numbers are recorded afterwards. Regret is the chosen test return minus that chunk's best possible test return, so a large negative regret means selection is noisy.",
+  "symbols": [
+    {
+      "symbol": "BTC/USDT",
+      "timeframe": "4h",
+      "bars": 12820,
+      "chunks": 5,
+      "chunk_bars": 2564,
+      "windows": 4,
+      "first_train": "2021-01-01 00:00:00",
+      "last_test": "2026-11-08 04:00:00",
+      "families": {
+        "bollinger": {
+          "symbol": "BTC/USDT",
+          "family": "bollinger",
+          "windows": 4,
+          "beat_buy_hold": 2,
+          "beat_buy_hold_pct": 50.0,
+          "risk_adjusted_beat": 0,
+          "risk_adjusted_windows": 3,
+          "risk_adjusted_pct": 0.0,
+          "median_test_ret": -1.29,
+          "median_test_excess": -32.9,
+          "median_regret": -2.76,
+          "median_test_trades": 18.5,
+          "picks": [
+            "bb30 k2.0",
+            "bb20 k2.0",
+            "bb20 k2.0",
+            "bb50 k2.5"
+          ],
+          "modal_pick": "bb20 k2.0",
+          "modal_pick_pct": 50.0,
+          "regret_note": null,
+          "verdict": "Mixed: beat buy & hold in 2 of 4 unseen chunks -- no reliable edge in this sample.",
+          "rows": [
+            {
+              "family": "bollinger",
+              "chosen_params": "bb30 k2.0",
+              "train_ret": 4.67,
+              "train_trades": 8,
+              "test_ret": -5.21,
+              "test_trades": 14,
+              "test_excess": 22.3,
+              "test_dd_pct": 6.17,
+              "test_buy_hold_dd_pct": 67.21,
+              "risk_adjusted_beat": false,
+              "best_test_params": "bb20 k2.0",
+              "best_test_ret": 0.31,
+              "regret": -5.52,
+              "candidates": [
+                {
+                  "params": "bb20 k2.0",
+                  "train_ret": 3.67,
+                  "train_trades": 17,
+                  "test_ret": 0.31,
+                  "test_trades": 14,
+                  "test_excess": 27.82,
+                  "test_dd_pct": 4.88,
+                  "test_buy_hold_dd_pct": 67.21,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "bb30 k2.0",
+                  "train_ret": 4.67,
+                  "train_trades": 8,
+                  "test_ret": -5.21,
+                  "test_trades": 14,
+                  "test_excess": 22.3,
+                  "test_dd_pct": 6.17,
+                  "test_buy_hold_dd_pct": 67.21,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "bb50 k2.5",
+                  "train_ret": 1.17,
+                  "train_trades": 1,
+                  "test_ret": -3.14,
+                  "test_trades": 3,
+                  "test_excess": 24.37,
+                  "test_dd_pct": 3.35,
+                  "test_buy_hold_dd_pct": 67.21,
+                  "risk_adjusted_beat": false
+                }
+              ],
+              "fold": 1,
+              "train_start": "2021-01-01 00:00:00",
+              "train_end": "2022-03-04 08:00:00",
+              "test_start": "2022-03-04 12:00:00",
+              "test_end": "2023-05-05 20:00:00"
+            },
+            {
+              "family": "bollinger",
+              "chosen_params": "bb20 k2.0",
+              "train_ret": 0.31,
+              "train_trades": 14,
+              "test_ret": 4.63,
+              "test_trades": 23,
+              "test_excess": -88.1,
+              "test_dd_pct": 6.58,
+              "test_buy_hold_dd_pct": 25.85,
+              "risk_adjusted_beat": false,
+              "best_test_params": "bb20 k2.0",
+              "best_test_ret": 4.63,
+              "regret": 0.0,
+              "candidates": [
+                {
+                  "params": "bb20 k2.0",
+                  "train_ret": 0.31,
+                  "train_trades": 14,
+                  "test_ret": 4.63,
+                  "test_trades": 23,
+                  "test_excess": -88.1,
+                  "test_dd_pct": 6.58,
+                  "test_buy_hold_dd_pct": 25.85,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "bb30 k2.0",
+                  "train_ret": -5.21,
+                  "train_trades": 14,
+                  "test_ret": 4.01,
+                  "test_trades": 17,
+                  "test_excess": -88.72,
+                  "test_dd_pct": 4.03,
+                  "test_buy_hold_dd_pct": 25.85,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "bb50 k2.5",
+                  "train_ret": -3.14,
+                  "train_trades": 3,
+                  "test_ret": 0.84,
+                  "test_trades": 2,
+                  "test_excess": -91.89,
+                  "test_dd_pct": 1.58,
+                  "test_buy_hold_dd_pct": 25.85,
+                  "risk_adjusted_beat": false
+                }
+              ],
+              "fold": 2,
+              "train_start": "2022-03-04 12:00:00",
+              "train_end": "2023-05-05 20:00:00",
+              "test_start": "2023-05-06 00:00:00",
+              "test_end": "2024-07-06 04:00:00"
+            },
+            {
+              "family": "bollinger",
+              "chosen_params": "bb20 k2.0",
+              "train_ret": 4.63,
+              "train_trades": 23,
+              "test_ret": -9.89,
+              "test_trades": 24,
+              "test_excess": -104.67,
+              "test_dd_pct": 13.42,
+              "test_buy_hold_dd_pct": 30.65,
+              "risk_adjusted_beat": false,
+              "best_test_params": "bb50 k2.5",
+              "best_test_ret": 4.4,
+              "regret": -14.29,
+              "candidates": [
+                {
+                  "params": "bb20 k2.0",
+                  "train_ret": 4.63,
+                  "train_trades": 23,
+                  "test_ret": -9.89,
+                  "test_trades": 24,
+                  "test_excess": -104.67,
+                  "test_dd_pct": 13.42,
+                  "test_buy_hold_dd_pct": 30.65,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "bb30 k2.0",
+                  "train_ret": 4.01,
+                  "train_trades": 17,
+                  "test_ret": 3.49,
+                  "test_trades": 15,
+                  "test_excess": -91.29,
+                  "test_dd_pct": 4.15,
+                  "test_buy_hold_dd_pct": 30.65,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "bb50 k2.5",
+                  "train_ret": 0.84,
+                  "train_trades": 2,
+                  "test_ret": 4.4,
+                  "test_trades": 6,
+                  "test_excess": -90.37,
+                  "test_dd_pct": 1.96,
+                  "test_buy_hold_dd_pct": 30.65,
+                  "risk_adjusted_beat": false
+                }
+              ],
+              "fold": 3,
+              "train_start": "2023-05-06 00:00:00",
+              "train_end": "2024-07-06 04:00:00",
+              "test_start": "2024-07-06 08:00:00",
+              "test_end": "2025-09-06 12:00:00"
+            },
+            {
+              "family": "bollinger",
+              "chosen_params": "bb50 k2.5",
+              "train_ret": 4.4,
+              "train_trades": 6,
+              "test_ret": 2.62,
+              "test_trades": 2,
+              "test_excess": 33.72,
+              "test_dd_pct": 0.67,
+              "test_buy_hold_dd_pct": 53.46,
+              "risk_adjusted_beat": null,
+              "best_test_params": "bb50 k2.5",
+              "best_test_ret": 2.62,
+              "regret": 0.0,
+              "candidates": [
+                {
+                  "params": "bb20 k2.0",
+                  "train_ret": -9.89,
+                  "train_trades": 24,
+                  "test_ret": -0.3,
+                  "test_trades": 15,
+                  "test_excess": 30.8,
+                  "test_dd_pct": 3.49,
+                  "test_buy_hold_dd_pct": 53.46,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "bb30 k2.0",
+                  "train_ret": 3.49,
+                  "train_trades": 15,
+                  "test_ret": 0.74,
+                  "test_trades": 10,
+                  "test_excess": 31.85,
+                  "test_dd_pct": 3.67,
+                  "test_buy_hold_dd_pct": 53.46,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "bb50 k2.5",
+                  "train_ret": 4.4,
+                  "train_trades": 6,
+                  "test_ret": 2.62,
+                  "test_trades": 2,
+                  "test_excess": 33.72,
+                  "test_dd_pct": 0.67,
+                  "test_buy_hold_dd_pct": 53.46,
+                  "risk_adjusted_beat": null
+                }
+              ],
+              "fold": 4,
+              "train_start": "2024-07-06 08:00:00",
+              "train_end": "2025-09-06 12:00:00",
+              "test_start": "2025-09-06 16:00:00",
+              "test_end": "2026-11-08 04:00:00"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "symbol": "ETH/USDT",
+      "timeframe": "4h",
+      "bars": 12820,
+      "chunks": 5,
+      "chunk_bars": 2564,
+      "windows": 4,
+      "first_train": "2021-01-01 00:00:00",
+      "last_test": "2026-11-08 04:00:00",
+      "families": {
+        "bollinger": {
+          "symbol": "ETH/USDT",
+          "family": "bollinger",
+          "windows": 4,
+          "beat_buy_hold": 2,
+          "beat_buy_hold_pct": 50.0,
+          "risk_adjusted_beat": 2,
+          "risk_adjusted_windows": 4,
+          "risk_adjusted_pct": 50.0,
+          "median_test_ret": -0.51,
+          "median_test_excess": -8.57,
+          "median_regret": -4.58,
+          "median_test_trades": 11.5,
+          "picks": [
+            "bb20 k2.0",
+            "bb50 k2.5",
+            "bb20 k2.0",
+            "bb30 k2.0"
+          ],
+          "modal_pick": "bb20 k2.0",
+          "modal_pick_pct": 50.0,
+          "regret_note": null,
+          "verdict": "Mixed: beat buy & hold in 2 of 4 unseen chunks -- no reliable edge in this sample.",
+          "rows": [
+            {
+              "family": "bollinger",
+              "chosen_params": "bb20 k2.0",
+              "train_ret": 4.78,
+              "train_trades": 15,
+              "test_ret": -1.13,
+              "test_trades": 14,
+              "test_excess": 24.33,
+              "test_dd_pct": 3.59,
+              "test_buy_hold_dd_pct": 74.16,
+              "risk_adjusted_beat": true,
+              "best_test_params": "bb50 k2.5",
+              "best_test_ret": 2.16,
+              "regret": -3.29,
+              "candidates": [
+                {
+                  "params": "bb20 k2.0",
+                  "train_ret": 4.78,
+                  "train_trades": 15,
+                  "test_ret": -1.13,
+                  "test_trades": 14,
+                  "test_excess": 24.33,
+                  "test_dd_pct": 3.59,
+                  "test_buy_hold_dd_pct": 74.16,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "bb30 k2.0",
+                  "train_ret": 3.06,
+                  "train_trades": 12,
+                  "test_ret": 1.8,
+                  "test_trades": 11,
+                  "test_excess": 27.25,
+                  "test_dd_pct": 3.09,
+                  "test_buy_hold_dd_pct": 74.16,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "bb50 k2.5",
+                  "train_ret": -2.03,
+                  "train_trades": 1,
+                  "test_ret": 2.16,
+                  "test_trades": 2,
+                  "test_excess": 27.61,
+                  "test_dd_pct": 0.67,
+                  "test_buy_hold_dd_pct": 74.16,
+                  "risk_adjusted_beat": null
+                }
+              ],
+              "fold": 1,
+              "train_start": "2021-01-01 00:00:00",
+              "train_end": "2022-03-04 08:00:00",
+              "test_start": "2022-03-04 12:00:00",
+              "test_end": "2023-05-05 20:00:00"
+            },
+            {
+              "family": "bollinger",
+              "chosen_params": "bb50 k2.5",
+              "train_ret": 2.16,
+              "train_trades": 2,
+              "test_ret": -6.11,
+              "test_trades": 3,
+              "test_excess": -58.89,
+              "test_dd_pct": 6.11,
+              "test_buy_hold_dd_pct": 29.46,
+              "risk_adjusted_beat": false,
+              "best_test_params": "bb20 k2.0",
+              "best_test_ret": 1.4,
+              "regret": -7.51,
+              "candidates": [
+                {
+                  "params": "bb20 k2.0",
+                  "train_ret": -1.13,
+                  "train_trades": 14,
+                  "test_ret": 1.4,
+                  "test_trades": 15,
+                  "test_excess": -51.38,
+                  "test_dd_pct": 7.52,
+                  "test_buy_hold_dd_pct": 29.46,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "bb30 k2.0",
+                  "train_ret": 1.8,
+                  "train_trades": 11,
+                  "test_ret": -2.26,
+                  "test_trades": 14,
+                  "test_excess": -55.04,
+                  "test_dd_pct": 10.61,
+                  "test_buy_hold_dd_pct": 29.46,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "bb50 k2.5",
+                  "train_ret": 2.16,
+                  "train_trades": 2,
+                  "test_ret": -6.11,
+                  "test_trades": 3,
+                  "test_excess": -58.89,
+                  "test_dd_pct": 6.11,
+                  "test_buy_hold_dd_pct": 29.46,
+                  "risk_adjusted_beat": false
+                }
+              ],
+              "fold": 2,
+              "train_start": "2022-03-04 12:00:00",
+              "train_end": "2023-05-05 20:00:00",
+              "test_start": "2023-05-06 00:00:00",
+              "test_end": "2024-07-06 04:00:00"
+            },
+            {
+              "family": "bollinger",
+              "chosen_params": "bb20 k2.0",
+              "train_ret": 1.4,
+              "train_trades": 15,
+              "test_ret": 0.11,
+              "test_trades": 20,
+              "test_excess": -41.47,
+              "test_dd_pct": 5.94,
+              "test_buy_hold_dd_pct": 65.11,
+              "risk_adjusted_beat": false,
+              "best_test_params": "bb30 k2.0",
+              "best_test_ret": 5.98,
+              "regret": -5.87,
+              "candidates": [
+                {
+                  "params": "bb20 k2.0",
+                  "train_ret": 1.4,
+                  "train_trades": 15,
+                  "test_ret": 0.11,
+                  "test_trades": 20,
+                  "test_excess": -41.47,
+                  "test_dd_pct": 5.94,
+                  "test_buy_hold_dd_pct": 65.11,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "bb30 k2.0",
+                  "train_ret": -2.26,
+                  "train_trades": 14,
+                  "test_ret": 5.98,
+                  "test_trades": 9,
+                  "test_excess": -35.6,
+                  "test_dd_pct": 2.11,
+                  "test_buy_hold_dd_pct": 65.11,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "bb50 k2.5",
+                  "train_ret": -6.11,
+                  "train_trades": 3,
+                  "test_ret": 1.49,
+                  "test_trades": 1,
+                  "test_excess": -40.08,
+                  "test_dd_pct": 1.21,
+                  "test_buy_hold_dd_pct": 65.11,
+                  "risk_adjusted_beat": true
+                }
+              ],
+              "fold": 3,
+              "train_start": "2023-05-06 00:00:00",
+              "train_end": "2024-07-06 04:00:00",
+              "test_start": "2024-07-06 08:00:00",
+              "test_end": "2025-09-06 12:00:00"
+            },
+            {
+              "family": "bollinger",
+              "chosen_params": "bb30 k2.0",
+              "train_ret": 5.98,
+              "train_trades": 9,
+              "test_ret": 9.06,
+              "test_trades": 9,
+              "test_excess": 56.48,
+              "test_dd_pct": 2.19,
+              "test_buy_hold_dd_pct": 67.41,
+              "risk_adjusted_beat": true,
+              "best_test_params": "bb30 k2.0",
+              "best_test_ret": 9.06,
+              "regret": 0.0,
+              "candidates": [
+                {
+                  "params": "bb20 k2.0",
+                  "train_ret": 0.11,
+                  "train_trades": 20,
+                  "test_ret": 8.68,
+                  "test_trades": 13,
+                  "test_excess": 56.09,
+                  "test_dd_pct": 3.63,
+                  "test_buy_hold_dd_pct": 67.41,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "bb30 k2.0",
+                  "train_ret": 5.98,
+                  "train_trades": 9,
+                  "test_ret": 9.06,
+                  "test_trades": 9,
+                  "test_excess": 56.48,
+                  "test_dd_pct": 2.19,
+                  "test_buy_hold_dd_pct": 67.41,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "bb50 k2.5",
+                  "train_ret": 1.49,
+                  "train_trades": 1,
+                  "test_ret": 4.41,
+                  "test_trades": 3,
+                  "test_excess": 51.83,
+                  "test_dd_pct": 0.46,
+                  "test_buy_hold_dd_pct": 67.41,
+                  "risk_adjusted_beat": null
+                }
+              ],
+              "fold": 4,
+              "train_start": "2024-07-06 08:00:00",
+              "train_end": "2025-09-06 12:00:00",
+              "test_start": "2025-09-06 16:00:00",
+              "test_end": "2026-11-08 04:00:00"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "headline": {
+    "bollinger": {
+      "windows": 8,
+      "beat_buy_hold": 4,
+      "beat_buy_hold_pct": 50.0,
+      "risk_adjusted_beat": 2,
+      "risk_adjusted_windows": 7,
+      "risk_adjusted_pct": 28.6,
+      "markets": [
+        "BTC/USDT",
+        "ETH/USDT"
+      ],
+      "verdict": "Mixed: beat buy & hold in 4 of 8 unseen chunks -- no reliable edge in this sample.",
+      "median_test_excess": -20.73
+    }
+  }
+}

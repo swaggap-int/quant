@@ -22,7 +22,8 @@ Two readings worth looking at:
   the family itself is fine.
 
 Examples:
-    python run_walkforward.py                            # BTC + ETH, 4h, 5 chunks
+    python run_walkforward.py                            # Bollinger reversion, BTC + ETH, 4h
+    python run_walkforward.py --family both              # legacy EMA + Donchian comparison
     python run_walkforward.py --folds 4 --timeframe 1d
     python run_walkforward.py --symbols BTC/USDT --family donchian
 
@@ -46,10 +47,16 @@ from quant.config import BacktestConfig
 from quant.datafeed import load_candles
 from quant.engine import Engine
 from quant.robustness import small_param_grid, make_strategy, short_params
+from quant.strategies.bollinger import BollingerReversion
 from quant.strategies.donchian import DonchianBreakout
 
 DONCHIAN_GRID = [(20, 10), (30, 15), (55, 20)]
-FAMILY_LABEL = {"ema": "EMA-ATR", "donchian": "Donchian"}
+BOLLINGER_GRID = (
+    {"period": 20, "entry_k": 2.0, "atr_stop_mult": 2.5},
+    {"period": 30, "entry_k": 2.0, "atr_stop_mult": 2.5},
+    {"period": 50, "entry_k": 2.5, "atr_stop_mult": 3.0},
+)
+FAMILY_LABEL = {"bollinger": "Bollinger reversion", "ema": "EMA-ATR", "donchian": "Donchian"}
 MIN_CHUNK_BARS = 300
 
 STUDY_GLOB = "walkforward_rolling_*.json"
@@ -124,7 +131,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--timeframe", default="4h")
     p.add_argument("--start", default="2021-01-01")
     p.add_argument("--folds", type=int, default=5, help="consecutive chunks (3-10); folds-1 are judged")
-    p.add_argument("--family", default="both", choices=["ema", "donchian", "both"])
+    p.add_argument("--family", default="bollinger", choices=["bollinger", "ema", "donchian", "both"])
     p.add_argument(
         "--out",
         default=None,
@@ -163,6 +170,23 @@ def fold_windows(n: int, folds: int) -> list[tuple[int, int, int, int]]:
 
 def candidate_rows(family: str) -> list[tuple[str, Callable[[], object]]]:
     """``(label, factory)`` pairs for one family; each factory makes a fresh strategy."""
+    if family == "bollinger":
+        return [
+            (
+                f"bb{int(p['period'])} k{float(p['entry_k']):.1f}",
+                lambda p=p: BollingerReversion(
+                    period=int(p["period"]),
+                    entry_k=float(p["entry_k"]),
+                    trend_period=200,
+                    atr_period=14,
+                    atr_stop_mult=float(p["atr_stop_mult"]),
+                    risk_pct=0.02,
+                    max_weight=1.0,
+                    trend_filter=True,
+                ),
+            )
+            for p in BOLLINGER_GRID
+        ]
     if family == "ema":
         return [(short_params(p), (lambda params=p: make_strategy(params)))
                 for p in small_param_grid()]

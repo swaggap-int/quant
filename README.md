@@ -1,8 +1,9 @@
 # quant
 
 An event-driven crypto backtester with realistic costs, plus a local web dashboard
-for comparing runs. One strategy ships with it: an EMA crossover with an ATR
-trailing stop and volatility-based position sizing.
+for comparing runs. Paper trading defaults to an EMA crossover with an ATR
+trailing stop and volatility-based position sizing; the walk-forward study
+defaults to a long-only Bollinger-band reversion family.
 
 The point of this repo is not the strategy. It is the machinery that stops a
 backtest from lying to you: fills at the next bar's open, taker fees and slippage
@@ -324,7 +325,10 @@ good the best of as many random schedules looks, given how many settings were
 tried. If the best real cell does not clear it, the winner is selection rather
 than signal.
 
-### What it says about the shipped strategy
+### What the EMA-ATR sweep says
+
+This sweep remains the EMA-ATR baseline; the walk-forward section below runs
+the Bollinger reversion family by default.
 
 BTC and ETH, daily and 4-hourly, from 2021: 60 combinations, 200 random
 schedules per market, `--seed 7`.
@@ -364,7 +368,8 @@ pick on the *next* chunk, which it never saw. Every chunk after the first is jud
 exactly once.
 
 ```bash
-python run_walkforward.py                              # BTC + ETH, 4h, 5 chunks
+python run_walkforward.py                              # Bollinger reversion, BTC + ETH, 4h
+python run_walkforward.py --family both                # legacy EMA-ATR + Donchian comparison
 python run_walkforward.py --folds 4 --timeframe 1d
 python run_walkforward.py --symbols BTC/USDT --family donchian
 ```
@@ -379,19 +384,24 @@ It reports three readings:
 * **Regret.** How far the chosen settings landed below that chunk's best possible
   settings. Large regret means selection is mostly noise, even when the family is fine.
 
-Five chunks, four judged windows per market, BTC and ETH 4h since 2021:
+Five chunks, four judged windows per market, BTC and ETH 4h since 2021,
+refreshed through 2026-11-08:
 
 | family | beat buy & hold | better return/drawdown | median excess |
 | --- | --- | --- | --- |
-| EMA-ATR | 4 of 8 | 5 of 8 | −3.9 pts |
-| Donchian | 4 of 8 | 4 of 8 | −4.7 pts |
+| Bollinger reversion | 4 of 8 | 2 of 7 | −20.7 pts |
 
-Neither family carries a reliable edge over holding in this sample. EMA-ATR is
-mildly better per unit of drawdown, which is the same trade-off the daily run shows,
-not a new finding. Every run writes its own dated file (for example
-`results/walkforward_rolling_4h_20261028T175500Z.json`) keeping every fold, every
-candidate setting and the regret for each pick, so the reading can be re-checked
-rather than trusted, and older studies stay comparable.
+Bollinger reversion beat buy & hold in only 4 of 8 unseen windows and earned
+more per unit of drawdown in 2 of 7. The split is not uniform: BTC was weaker
+(2/4 windows, −32.9 points median excess, 0/3 risk-adjusted), while ETH was
+mixed (2/4, −8.6 points, 2/4). The most-picked setting was `bb20 k2.0` in
+50% of folds and median selection regret was −2.8 points on BTC and −4.6 on
+ETH. This is a different signal, not a better one in this sample. EMA-ATR and
+Donchian remain available for comparison with `--family both`; the default
+study now runs Bollinger reversion. Every run writes its own dated file (for
+example `results/walkforward_rolling_4h_20261108T044311Z.json`) keeping every
+fold, every candidate setting and the regret for each pick, so the reading can
+be re-checked rather than trusted, and older studies stay comparable.
 
 The archive keeps the ten newest dated studies. Each run prunes what is older than
 that, ordering by the timestamp in the filename rather than the file's mtime, so
@@ -518,7 +528,7 @@ quant/
   datafeed.py              four exchange adapters, pagination, retries, CSV cache
   indicators.py            EMA, SMA, RMA, ATR, RSI, Donchian, rolling std
   broker.py                fills, fees, slippage, stops, sizing, trade records
-  strategies/              Strategy base, BarWindow, ema_atr.py
+  strategies/              Strategy base, BarWindow, EMA/Donchian/Bollinger implementations
   engine.py                the bar loop and the result object
   metrics.py               Sharpe, Sortino, Calmar, drawdown, trade stats
   robustness.py            breadth sweep, aggregation, random-entry controls
