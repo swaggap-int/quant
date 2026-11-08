@@ -7,6 +7,7 @@ Examples
     python run_robustness.py                          # 4 markets x 15 settings + luck test
     python run_robustness.py --family bollinger        # Bollinger grid, separate output
     python run_robustness.py --compare                 # side-by-side saved EMA vs Bollinger
+    python run_robustness.py --compare --compare-ema old/ema.json --compare-bollinger old/boll.json
     python run_robustness.py --quick                   # 3 settings, 50 random schedules
     python run_robustness.py --symbols BTC/USDT --timeframes 1d,4h
     python run_robustness.py --null-runs 0             # breadth only, no luck test
@@ -119,7 +120,21 @@ def build_parser() -> argparse.ArgumentParser:
     out.add_argument(
         "--compare",
         action="store_true",
-        help="read the default EMA and Bollinger artifacts and print a side-by-side report",
+        help="read the EMA and Bollinger artifacts and print a side-by-side report",
+    )
+    out.add_argument(
+        "--compare-ema",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help="EMA artifact for --compare (default: results/robustness.json)",
+    )
+    out.add_argument(
+        "--compare-bollinger",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help="Bollinger artifact for --compare (default: results/robustness_bollinger.json)",
     )
     out.add_argument("--quiet", action="store_true", help="suppress progress chatter")
     out.add_argument(
@@ -157,6 +172,12 @@ def parse_windows(args: argparse.Namespace, default_start: str | None, default_e
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if not args.compare and (args.compare_ema or args.compare_bollinger):
+        print(
+            "error: --compare-ema and --compare-bollinger require --compare",
+            file=sys.stderr,
+        )
+        return 2
     if args.compare:
         return _compare_saved_sweeps(args)
     markets = parse_markets(args)
@@ -298,7 +319,10 @@ def _load_saved_sweep(path: Path) -> dict[str, Any]:
 
 def _compare_saved_sweeps(args: argparse.Namespace) -> int:
     """Print the EMA and Bollinger sweeps side by side from their default artifacts."""
-    paths = {"ema": default_out("ema"), "bollinger": default_out("bollinger")}
+    paths = {
+        "ema": args.compare_ema or default_out("ema"),
+        "bollinger": args.compare_bollinger or default_out("bollinger"),
+    }
     missing = [str(path) for path in paths.values() if not path.exists()]
     if missing:
         print(

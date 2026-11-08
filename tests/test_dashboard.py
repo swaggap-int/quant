@@ -947,6 +947,58 @@ class TestRobustnessDashboardRefresh(unittest.TestCase):
         self.assertIn("Bollinger reversion", text)
         self.assertIn("BTC/USDT 1d", text)
 
+    def test_compare_accepts_custom_artifact_paths(self) -> None:
+        import contextlib
+        import io
+        import run_robustness
+
+        def payload(family):
+            return {
+                "family": family,
+                "grid_size": 15,
+                "window": {"start": "2021-01-01", "end": "2026-11-08", "fee_bps": 10.0, "slippage_bps": 5.0},
+                "summary": {
+                    "planned": 15,
+                    "ran": 15,
+                    "beat_buy_hold": 0,
+                    "beat_buy_hold_pct": 0.0,
+                    "median_excess_pct": -100.0,
+                    "median_sharpe": 0.1,
+                    "total_trades": 10,
+                    "median_p_value": 0.5,
+                    "by_market": [],
+                },
+            }
+
+        ema_path = self.dir / "custom_ema.json"
+        bollinger_path = self.dir / "custom_bollinger.json"
+        ema_path.write_text(json.dumps(payload(None)), encoding="utf-8")
+        bollinger_path.write_text(json.dumps(payload("bollinger")), encoding="utf-8")
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            rc = run_robustness.main([
+                "--compare",
+                "--compare-ema", str(ema_path),
+                "--compare-bollinger", str(bollinger_path),
+            ])
+
+        self.assertEqual(rc, 0)
+        text = output.getvalue()
+        self.assertIn("EMA-ATR", text)
+        self.assertIn("Bollinger reversion", text)
+
+    def test_compare_path_options_require_compare(self) -> None:
+        import contextlib
+        import io
+        import run_robustness
+
+        errors = io.StringIO()
+        with contextlib.redirect_stderr(errors):
+            rc = run_robustness.main(["--compare-ema", "ema.json"])
+
+        self.assertEqual(rc, 2)
+        self.assertIn("require --compare", errors.getvalue())
+
     def test_bollinger_main_skips_ema_dashboard_refresh(self) -> None:
         import contextlib
         import io
