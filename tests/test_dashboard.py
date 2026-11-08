@@ -632,7 +632,7 @@ class TestExcessBuildGuards(unittest.TestCase):
         combined = rc.stdout + rc.stderr
         self.assertIn("robustness.json", combined)
 
-    def test_stale_snapshot_fails_loudly(self) -> None:
+    def test_stale_snapshot_rebuilds(self) -> None:
         results = self.dir / "results"
         results.mkdir(exist_ok=True)
         (results / "status.json").write_text(
@@ -681,9 +681,16 @@ class TestExcessBuildGuards(unittest.TestCase):
             capture_output=True,
             text=True,
         )
-        self.assertNotEqual(rc2.returncode, 0, "build should fail when snapshot is stale")
+        self.assertEqual(rc2.returncode, 0, rc2.stdout + rc2.stderr)
         combined = rc2.stdout + rc2.stderr
         self.assertIn("stale", combined.lower())
+        self.assertGreater(
+            snapshot.stat().st_mtime,
+            (results / "status.json").stat().st_mtime,
+            "rebuild should leave the snapshot newer than its sources",
+        )
+        rebuilt = json.loads(snapshot.read_text(encoding="utf-8"))
+        self.assertEqual(rebuilt["paper"]["trades"], 2)
 
     # -- server-side freshness guard ----------------------------------------
 

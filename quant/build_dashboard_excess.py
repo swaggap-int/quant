@@ -206,8 +206,9 @@ def main() -> int:
 
     stale = _freshness_guard(sources, OUT)
     if stale:
-        print(stale)
-        return 2
+        # Replacing a stale snapshot is this command's job: warn, then rebuild
+        # instead of refusing until someone manually bumps the file's mtime.
+        print(f"{stale}; rebuilding")
 
     paper_excess_from_status = bool(
         paper.get("excess_return_pct") == status.get("paper", {}).get("latest_metrics", {}).get("excess_return_pct")
