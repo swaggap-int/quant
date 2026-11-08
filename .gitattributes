@@ -1,3 +1,6 @@
+# The whole tree is stored and checked out with LF.
+* text=auto eol=lf
+
 # Dashboard sources are stored LF. They were committed as CRLF, which made every
 # edit look like a whole-file rewrite; pinning the dashboard here keeps future
 # diffs to the lines that actually changed.
