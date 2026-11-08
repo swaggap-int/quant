@@ -18,6 +18,56 @@ python run_backtest.py --symbol ETH/USDT --timeframe 4h --start 2022-01-01
 python serve_dashboard.py --open         # browse every run at 127.0.0.1:8765
 ```
 
+### Setup on macOS
+
+This project lives at `~/quant`: macOS blocks launchd jobs from reading `~/Documents` (TCC), so the scheduled paper run cannot run from there.
+
+A failed scheduled run announces itself: a macOS notification banner plus a
+block in `results/paper/alerts.log` (`tasks/notify_failure.sh --test` shows what
+one looks like).
+
+The gap that an alert cannot cover is a job that never starts: `tasks/check_paper_stale.sh`
+(installed as `com.quant.paperwatch`, checked three times a day) sends the same
+banner when no successful run has happened for 26 hours.
+
+Alerts can also leave this Mac: `tasks/setup_alert_channel.sh --slack <webhook-url>` or
+`--email you@example.com` stores a Slack-compatible webhook or an SMTP mailbox in
+`~/.quant/alert.conf` (mode 600, outside the repo), and every banner is mirrored there.
+The send still happens on this Mac, so a Mac that is off sends nothing.
+
+For a Mac that is simply off, a watcher has to live elsewhere: after every run
+`tasks/send_heartbeat.sh` pings `QUANT_HEARTBEAT_URL` (set it with
+`tasks/setup_alert_channel.sh --heartbeat URL`, `/fail` is appended to a failed
+run), and whatever watches that ping alerts when it stops arriving. It is a no-op
+until a URL is configured, and it never changes the run's exit status.
+
+The code uses `int | None` annotations, so it needs Python 3.10 or newer; the
+`python3` that ships with macOS is 3.9. From this directory:
+
+```bash
+python3.15 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+```
+
+`python.org` builds of Python ship without a CA bundle, so every HTTPS fetch
+fails with `CERTIFICATE_VERIFY_FAILED`. Install `certifi` once and point `ssl`
+at its bundle (this project's `.venv/bin/activate` already does the export):
+
+```bash
+pip install certifi
+export SSL_CERT_FILE="$(python -c 'import certifi;print(certifi.where())')"
+```
+
+The test suite additionally needs `pytest`; the three browser UI test modules
+need `playwright` and its Chromium build:
+
+```bash
+pip install pytest playwright
+playwright install chromium
+```
+
+
 `numpy` is the only hard dependency. Data comes from public exchange endpoints
 with no API key and no account, and every fetch is cached under `data/cache/`,
 so a second run on the same symbol and timeframe needs no network at all.
@@ -104,6 +154,10 @@ self-contained page — no framework, no build step, no CDN, no webfont. A rail 
 the left lists the saved runs and the vertical scale; the cards on the right are
 the instrument.
 
+On macOS, `tasks/install_dashboard_macos.sh` installs this as a launchd agent
+(`com.quant.dashboard`) that starts it at login and restarts it if it exits;
+`--verify` polls it once, `--uninstall` removes it. It binds loopback only.
+
 * the equity curve as the hero, with buy & hold overlaid and an underwater
   drawdown band beneath it, sharing one time axis
 * three labelled vertical scales — both series, strategy only (so a curve that
@@ -113,6 +167,11 @@ the instrument.
 * a spec sheet of returns, risk, trade quality and cost metrics
 * a fragility strip that names the largest losers and the share of the result they
   explain, so a good-looking run is not mistaken for a robust one
+* a walk-forward card that reports each strategy family's beat rate against buy &
+  hold and its return-per-drawdown count on unseen chunks, with the study's own
+  plain-language verdict underneath, a picker for every saved study, and a **Run
+  again** control that reruns the study with the timeframe, chunk count, strategy
+  family and markets chosen on the card and refreshes it when the run finishes
 * monthly returns, and the full round-trip trade log (or the raw fill log)
 * a **New run** form that re-runs the backtester with different parameters, so
   you can see how fragile a result is to `fast`/`slow`/risk
@@ -193,6 +252,17 @@ If a fetch fails, `--provider auto` moves down the list: Binance (global, and th
 US mirror, because `api.binance.com` returns HTTP 451 from US IPs), then OKX,
 then Kraken, then Coinbase. Coinbase has no weekly candles, so `--timeframe 1w`
 falls through to another venue.
+
+For the daily **paper-only** replay, [tasks/paper_daily.sh](tasks/paper_daily.sh)
+uses `--provider okx --refresh --bars 500` to avoid switching venues between
+runs. To repeat the same test manually from the project directory, use
+`python paper_trade.py --symbol BTC/USDT --timeframe 1d --provider okx --bars 500 --refresh`.
+The launchd job is installed with `tasks/install_paper_daily_macos.sh` and runs at 07:30 local; `tasks/paper_daily.sh` is the wrapper it calls. See [RUNBOOK.md](RUNBOOK.md) for what to check when it stops running or the alerts stop arriving.
+If OKX is unavailable, that run fails rather than silently falling back to
+another exchange. Compare the `data_end_iso`, trade count and health in
+`results/paper/last_run.json` across days; returns from older Binance or other
+provider runs are not directly comparable. This replays a rolling history—it
+is not evidence of a new trade today or proof of profitability.
 
 ## After one backtest, read this before trusting it
 
@@ -280,6 +350,54 @@ of it is visible from a single backtest. The study is reproducible to the digit
 (same data, same `--seed`) and is saved to `results/robustness.json`, which the
 dashboard ignores because it is not a run.
 
+## Walk-forward: does the pick survive the next chunk?
+
+The robustness sweep is still in-sample: every cell sees the whole window.
+`run_walkforward.py` is the out-of-sample counterpart. It cuts the history into
+consecutive chunks, lets each chunk pick settings by its own return, and judges that
+pick on the *next* chunk, which it never saw. Every chunk after the first is judged
+exactly once.
+
+```bash
+python run_walkforward.py                              # BTC + ETH, 4h, 5 chunks
+python run_walkforward.py --folds 4 --timeframe 1d
+python run_walkforward.py --symbols BTC/USDT --family donchian
+```
+
+It reports three readings:
+
+* **Beat rate.** How often the honestly chosen settings beat buy & hold on the next
+  unseen chunk. Two out of four is noise; most of them is worth a longer look.
+* **Return per unit of drawdown.** A trend system can lose the return race and still be
+  a lower-risk path. When that is what the numbers say, the verdict says it instead of
+  calling the result a failure.
+* **Regret.** How far the chosen settings landed below that chunk's best possible
+  settings. Large regret means selection is mostly noise, even when the family is fine.
+
+Five chunks, four judged windows per market, BTC and ETH 4h since 2021:
+
+| family | beat buy & hold | better return/drawdown | median excess |
+| --- | --- | --- | --- |
+| EMA-ATR | 4 of 8 | 5 of 8 | −3.9 pts |
+| Donchian | 4 of 8 | 4 of 8 | −4.7 pts |
+
+Neither family carries a reliable edge over holding in this sample. EMA-ATR is
+mildly better per unit of drawdown, which is the same trade-off the daily run shows,
+not a new finding. Every run writes its own dated file (for example
+`results/walkforward_rolling_4h_20261028T175500Z.json`) keeping every fold, every
+candidate setting and the regret for each pick, so the reading can be re-checked
+rather than trusted, and older studies stay comparable.
+
+The archive keeps the ten newest dated studies. Each run prunes what is older than
+that, ordering by the timestamp in the filename rather than the file's mtime, so
+copying or restoring the directory cannot reshuffle it. Undated studies (the
+original `walkforward_rolling_4h.json`) and anything the script did not write are
+never touched. `--keep-studies N` changes the limit; `--keep-studies 0` turns
+pruning off. To see the exact files that would be removed without running a
+study or deleting anything, use `python run_walkforward.py --dry-run-prune`
+(or add `--out path/to/study.json` to inspect that output directory instead).
+Normal runs print each file's name before removing it.
+
 ## What this project does and does not model
 
 **It models:** fills at the next bar's open, taker fees and slippage on every order,
@@ -306,9 +424,8 @@ system and not a prediction of what will happen next.
 * **One symbol at a time.** No portfolio construction, correlation or
   cross-asset risk budget.
 * **The robustness sweep is in-sample.** It tests breadth — many markets, timeframes
-  and settings — but every cell still sees the whole window. A true walk-forward
-  split, where parameters are chosen on past data and judged on data they never
-  saw, is the honest next step; `quant/robustness.py` is the scaffolding for it.
+  and settings — but every cell still sees the whole window. `run_walkforward.py`
+  performs the out-of-sample split; the sweep is still breadth, not proof.
 * **The new multi-window mode is a first cut, not a real out-of-sample study.* **The dashboard now names fragility explicitly.** On a run page it can show the largest
   losers and the share of the result those few trades explain, because a good-looking
   equity curve can still be mostly one or two lucky trades. That is the dashboard's job:
@@ -390,6 +507,7 @@ The current plan is in `roadmap.md`. If this readme says one thing and `roadmap.
 run_backtest.py            CLI entry point
 serve_dashboard.py         dashboard launcher
 run_robustness.py          sweep across markets/settings + the random-timing luck test
+run_walkforward.py         rolling out-of-sample study: pick on one chunk, judge on the next
 quant/
   config.py                costs, risk limits, timeframe maths
   datafeed.py              four exchange adapters, pagination, retries, CSV cache
@@ -424,3 +542,63 @@ cell is good only if it traded enough *and* beat buy & hold, the random-entry
 control takes the same trade count and holding times as the real strategy, and
 the selection adjustment reduces to the sample mean when only one setting was
 tried.
+## Results scope: paper excess vs sweep breadth
+`results/dashboard_excess.json` is a frozen read of two separate frozen sources:
+
+- `results/status.json` gives a **single-paper** reading. Its
+  `paper.excess_return_pct` is the active paper artifact's **single-window**
+  excess for that one backtest run. It is **not** a sweep result.
+- `results/explore_notes.json` gives a **swept** reading under `breadth`.
+  Its `breadth.median_excess_pct` is the **median across the swept cells**.
+
+These are intentionally different quantities. `results/robustness.json` is a
+**multi-cell sweep summary** and has **no equivalent single-paper** excess
+field, so the excess builder does **not** assert a live cross-check for
+`paper.excess_return_pct` here.
+
+When you rerun the robustness sweep, do it through the supported chain:
+1. `python run_robustness.py`
+2. `python quant/regenerate_frozen_reads.py`
+3. `python quant/build_dashboard_excess.py`
+
+Do **not** hand-edit `results/status.json`, `results/explore_notes.json`,
+or `results/dashboard_excess.json` to force a match with
+`results/robustness.json`. That breaks the frozen-read provenance and the
+verification assertions in the excess builder.
+
+### Why paper.excess_return_pct and breadth.median_excess_pct are different by design
+
+`paper.excess_return_pct` and `breadth.median_excess_pct` are intentionally
+different measurements, and seeing them disagree is the normal case, not a bug in
+the dashboard or the sweep.
+
+- `paper.excess_return_pct` is the **active paper artifact's single-window excess**
+  for one backtest run. If `paper.total_return_pct` is 18.5% and
+  `paper.buy_hold_return_pct` is 180.1%, then `paper.excess_return_pct` is about
+  -161.6%. It answers: *for that one run, how much did it beat buy & hold by?*
+- `breadth.median_excess_pct` is the **median across the swept cells** in the current
+  robustness study. If the sweep ran 60 market × setting combinations whose
+  excesses range from roughly -56 to -246 points, the median can be about -170.0
+  points even though it includes cells the active paper artifact was never run
+  against. It answers: *across the whole sweep, what is the typical excess?*
+
+These are not two readings of the same number. One is a single run; the other is a
+median over many runs, many settings and many markets. They are allowed to disagree.
+The frozen-read step in the supported chain (`quant/regenerate_frozen_reads.py`) does
+still cross-check the sweep's equivalent field against the active paper artifact before
+it refreshes `results/explore_notes.json`, but the excess builder does **not** assert
+`paper.excess_return_pct == breadth.median_excess_pct`, because that would equate a
+single-window reading with a sweep median by construction.
+
+Smoke note: `paper.excess_return_pct` and `breadth.median_excess_pct` are different
+measurements by design. `paper.excess_return_pct` is the active paper artifact's
+single-window excess vs buy & hold for that one run; `breadth.median_excess_pct` is
+the median across the swept cells in the current robustness study. If they disagree,
+that is expected. If you want them to line up, rerun the chain in order:
+
+1. `python run_robustness.py`
+2. `python quant/regenerate_frozen_reads.py`
+3. `python quant/build_dashboard_excess.py`
+
+Hand-editing one file to make the two numbers match breaks the provenance and trips the
+verification assertions.
