@@ -1,0 +1,6 @@
+# Dashboard sources are stored LF. They were committed as CRLF, which made every
+# edit look like a whole-file rewrite; pinning the dashboard here keeps future
+# diffs to the lines that actually changed.
+quant/dashboard/** text eol=lf
+serve_dashboard.py text eol=lf
+tests/test_dashboard*.py text eol=lf
