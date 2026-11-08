@@ -937,8 +937,6 @@ def make_handler(index: RunIndex) -> type[BaseHTTPRequestHandler]:
                     except Exception as exc:
                         return self._json(500, {"error": f"could not read {file.name}: {exc}"})
                     return self._json(200, data)
-                if path == "/script.js":
-                    return self._static("script.js")
                 # Anything else under /results/... that isn't dashboard_excess.json is a
                 # legitimate 404 (not a stale guard), so the browser can keep retrying.
                 if path.startswith("/results/"):
