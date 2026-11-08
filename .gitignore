@@ -9,4 +9,9 @@ data/cache/
 
 # Server log from serve_dashboard.py, and captured sweep output.
 dashboard.log
+.dashboard.pid
 results/*.log
+
+# Machine-local paper state, logs, and a duplicated results tree.
+results/paper/
+results/results/
