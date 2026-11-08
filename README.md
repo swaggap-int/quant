@@ -333,6 +333,22 @@ good the best of as many random schedules looks, given how many settings were
 tried. If the best real cell does not clear it, the winner is selection rather
 than signal.
 
+### Side-by-side headline
+
+Both saved sweeps cover 2021-01-01 through 2026-11-08, with BTC and ETH on
+daily and 4-hourly bars, 15 settings per market, and 200 random schedules per
+market (`--seed 7`). The current headline is:
+
+| family | cells | beat b&h | median excess | median Sharpe | trades | luck p |
+| --- | --- | --- | --- | --- | --- | --- |
+| EMA-ATR | 60/60 | 0 (0%) | −146.6% | 0.49 | 4,086 | 0.08 |
+| Bollinger reversion | 60/60 | 0 (0%) | −175.0% | 0.15 | 1,571 | 0.28 |
+
+`median excess` is the median cell return versus buy & hold; `luck p` is the
+share of random schedules that matched or beat the signal, so lower is better.
+`--compare` prints this headline plus a per-market breakdown from the saved
+artifacts without rerunning either sweep.
+
 ### What the EMA-ATR sweep says
 
 This sweep remains the EMA-ATR baseline; the walk-forward section below
