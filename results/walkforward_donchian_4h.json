@@ -1,0 +1,41 @@
+{
+  "symbol": "BTC/USDT",
+  "timeframe": "4h",
+  "total_bars": 12729,
+  "train_bars": 8910,
+  "test_bars": 3819,
+  "rows": [
+    {
+      "params": "20/10",
+      "train_ret": 111.84,
+      "train_trades": 124,
+      "test_ret": -14.68,
+      "test_trades": 63,
+      "test_excess": 7.99
+    },
+    {
+      "params": "30/15",
+      "train_ret": 130.04,
+      "train_trades": 93,
+      "test_ret": -15.77,
+      "test_trades": 47,
+      "test_excess": 6.9
+    },
+    {
+      "params": "55/20",
+      "train_ret": 87.45,
+      "train_trades": 63,
+      "test_ret": -7.57,
+      "test_trades": 28,
+      "test_excess": 15.1
+    }
+  ],
+  "best_on_train": {
+    "params": "30/15",
+    "train_ret": 130.04,
+    "train_trades": 93,
+    "test_ret": -15.77,
+    "test_trades": 47,
+    "test_excess": 6.9
+  }
+}

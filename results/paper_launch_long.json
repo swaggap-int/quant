@@ -1,0 +1,22 @@
+{
+  "mode": "paper_launch_long",
+  "run_id": "live-BTC/USDT-1d-0",
+  "period_bars": 500,
+  "live_fills": 10,
+  "paper_fills": 10,
+  "live_trades": 5,
+  "paper_trades": 5,
+  "parity_ok": true,
+  "divergences": [],
+  "divergence_notes": [
+    "Same fill model (next-open, fees, slippage, stops) in both paths by construction.",
+    "Same warmup (strategy.warmup_bars) and closed-bar evaluation in both paths.",
+    "Known benign sources: final-bar pending orders never fill in either path; policy-trip bookkeeping may timestamp one bar apart without changing fills."
+  ],
+  "live_notes": [],
+  "paper_notes": [],
+  "extra": {},
+  "window_bars": 500,
+  "symbol": "BTC/USDT",
+  "timeframe": "1d"
+}

@@ -1,0 +1,21 @@
+{
+  "mode": "paper_launch_check",
+  "run_id": "live-TEST/USDT-1d-0",
+  "period_bars": 60,
+  "live_fills": 12,
+  "paper_fills": 12,
+  "live_trades": 6,
+  "paper_trades": 6,
+  "parity_ok": true,
+  "divergences": [],
+  "divergence_notes": [
+    "Same fill model (next-open, fees, slippage, stops) in both paths by construction.",
+    "Same warmup (strategy.warmup_bars) and closed-bar evaluation in both paths.",
+    "Known benign sources: final-bar pending orders never fill in either path; policy-trip bookkeeping may timestamp one bar apart without changing fills."
+  ],
+  "live_notes": [],
+  "paper_notes": [],
+  "extra": {
+    "plan": "60-bar defined paper period, alternating entries"
+  }
+}

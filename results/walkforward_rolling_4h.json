@@ -1,0 +1,1050 @@
+{
+  "study": "rolling_walkforward",
+  "timeframe": "4h",
+  "folds": 5,
+  "families": [
+    "ema",
+    "donchian"
+  ],
+  "note": "Each chunk picks parameters on the chunk immediately before it and is judged on the next, never-seen chunk. Picks use train return only; test numbers are recorded afterwards. Regret is the chosen test return minus that chunk's best possible test return, so a large negative regret means selection is noisy.",
+  "symbols": [
+    {
+      "symbol": "BTC/USDT",
+      "timeframe": "4h",
+      "bars": 12758,
+      "chunks": 5,
+      "chunk_bars": 2551,
+      "windows": 4,
+      "first_train": "2021-01-01 00:00:00",
+      "last_test": "2026-10-28 20:00:00",
+      "families": {
+        "ema": {
+          "symbol": "BTC/USDT",
+          "family": "ema",
+          "windows": 4,
+          "beat_buy_hold": 2,
+          "beat_buy_hold_pct": 50.0,
+          "risk_adjusted_beat": 3,
+          "risk_adjusted_windows": 4,
+          "risk_adjusted_pct": 75.0,
+          "median_test_ret": 21.71,
+          "median_test_excess": -11.0,
+          "median_regret": 0.0,
+          "median_test_trades": 16.0,
+          "picks": [
+            "30/60 s4.0 t5.0",
+            "30/60 s4.0 t5.0",
+            "30/60 s4.0 t5.0",
+            "30/60 s4.0 t5.0"
+          ],
+          "modal_pick": "30/60 s4.0 t5.0",
+          "modal_pick_pct": 100.0,
+          "regret_note": null,
+          "verdict": "Beat buy & hold in only 2 of 4 unseen chunks, but earned more per unit of drawdown in 3 of 4 -- a lower-risk path, not a higher-return one.",
+          "rows": [
+            {
+              "family": "ema",
+              "chosen_params": "30/60 s4.0 t5.0",
+              "train_ret": 8.81,
+              "train_trades": 19,
+              "test_ret": 21.8,
+              "test_trades": 16,
+              "test_excess": 58.64,
+              "test_dd_pct": 8.88,
+              "test_buy_hold_dd_pct": 67.21,
+              "risk_adjusted_beat": true,
+              "best_test_params": "30/60 s4.0 t5.0",
+              "best_test_ret": 21.8,
+              "regret": 0.0,
+              "candidates": [
+                {
+                  "params": "20/50 s2.5 t3.0",
+                  "train_ret": 3.16,
+                  "train_trades": 24,
+                  "test_ret": 1.8,
+                  "test_trades": 20,
+                  "test_excess": 38.64,
+                  "test_dd_pct": 7.05,
+                  "test_buy_hold_dd_pct": 67.21,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "10/40 s2.0 t2.5",
+                  "train_ret": 1.84,
+                  "train_trades": 41,
+                  "test_ret": -7.68,
+                  "test_trades": 39,
+                  "test_excess": 29.15,
+                  "test_dd_pct": 16.17,
+                  "test_buy_hold_dd_pct": 67.21,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "30/60 s4.0 t5.0",
+                  "train_ret": 8.81,
+                  "train_trades": 19,
+                  "test_ret": 21.8,
+                  "test_trades": 16,
+                  "test_excess": 58.64,
+                  "test_dd_pct": 8.88,
+                  "test_buy_hold_dd_pct": 67.21,
+                  "risk_adjusted_beat": true
+                }
+              ],
+              "fold": 1,
+              "train_start": "2021-01-01 00:00:00",
+              "train_end": "2022-03-02 04:00:00",
+              "test_start": "2022-03-02 08:00:00",
+              "test_end": "2023-05-01 16:00:00"
+            },
+            {
+              "family": "ema",
+              "chosen_params": "30/60 s4.0 t5.0",
+              "train_ret": 21.8,
+              "train_trades": 16,
+              "test_ret": 26.59,
+              "test_trades": 18,
+              "test_excess": -90.51,
+              "test_dd_pct": 10.18,
+              "test_buy_hold_dd_pct": 22.43,
+              "risk_adjusted_beat": false,
+              "best_test_params": "30/60 s4.0 t5.0",
+              "best_test_ret": 26.59,
+              "regret": 0.0,
+              "candidates": [
+                {
+                  "params": "20/50 s2.5 t3.0",
+                  "train_ret": 1.8,
+                  "train_trades": 20,
+                  "test_ret": 14.57,
+                  "test_trades": 22,
+                  "test_excess": -102.53,
+                  "test_dd_pct": 9.63,
+                  "test_buy_hold_dd_pct": 22.43,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "10/40 s2.0 t2.5",
+                  "train_ret": -7.68,
+                  "train_trades": 39,
+                  "test_ret": 19.62,
+                  "test_trades": 32,
+                  "test_excess": -97.48,
+                  "test_dd_pct": 9.8,
+                  "test_buy_hold_dd_pct": 22.43,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "30/60 s4.0 t5.0",
+                  "train_ret": 21.8,
+                  "train_trades": 16,
+                  "test_ret": 26.59,
+                  "test_trades": 18,
+                  "test_excess": -90.51,
+                  "test_dd_pct": 10.18,
+                  "test_buy_hold_dd_pct": 22.43,
+                  "risk_adjusted_beat": false
+                }
+              ],
+              "fold": 2,
+              "train_start": "2022-03-02 08:00:00",
+              "train_end": "2023-05-01 16:00:00",
+              "test_start": "2023-05-01 20:00:00",
+              "test_end": "2024-06-29 20:00:00"
+            },
+            {
+              "family": "ema",
+              "chosen_params": "30/60 s4.0 t5.0",
+              "train_ret": 26.59,
+              "train_trades": 18,
+              "test_ret": 21.62,
+              "test_trades": 15,
+              "test_excess": -59.42,
+              "test_dd_pct": 5.16,
+              "test_buy_hold_dd_pct": 30.65,
+              "risk_adjusted_beat": true,
+              "best_test_params": "30/60 s4.0 t5.0",
+              "best_test_ret": 21.62,
+              "regret": 0.0,
+              "candidates": [
+                {
+                  "params": "20/50 s2.5 t3.0",
+                  "train_ret": 14.57,
+                  "train_trades": 22,
+                  "test_ret": 8.42,
+                  "test_trades": 21,
+                  "test_excess": -72.62,
+                  "test_dd_pct": 12.57,
+                  "test_buy_hold_dd_pct": 30.65,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "10/40 s2.0 t2.5",
+                  "train_ret": 19.62,
+                  "train_trades": 32,
+                  "test_ret": 13.87,
+                  "test_trades": 38,
+                  "test_excess": -67.17,
+                  "test_dd_pct": 11.69,
+                  "test_buy_hold_dd_pct": 30.65,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "30/60 s4.0 t5.0",
+                  "train_ret": 26.59,
+                  "train_trades": 18,
+                  "test_ret": 21.62,
+                  "test_trades": 15,
+                  "test_excess": -59.42,
+                  "test_dd_pct": 5.16,
+                  "test_buy_hold_dd_pct": 30.65,
+                  "risk_adjusted_beat": true
+                }
+              ],
+              "fold": 3,
+              "train_start": "2023-05-01 20:00:00",
+              "train_end": "2024-06-29 20:00:00",
+              "test_start": "2024-06-30 00:00:00",
+              "test_end": "2025-08-29 04:00:00"
+            },
+            {
+              "family": "ema",
+              "chosen_params": "30/60 s4.0 t5.0",
+              "train_ret": 21.62,
+              "train_trades": 15,
+              "test_ret": 11.24,
+              "test_trades": 16,
+              "test_excess": 37.42,
+              "test_dd_pct": 8.33,
+              "test_buy_hold_dd_pct": 53.46,
+              "risk_adjusted_beat": true,
+              "best_test_params": "20/50 s2.5 t3.0",
+              "best_test_ret": 17.58,
+              "regret": -6.34,
+              "candidates": [
+                {
+                  "params": "20/50 s2.5 t3.0",
+                  "train_ret": 8.42,
+                  "train_trades": 21,
+                  "test_ret": 17.58,
+                  "test_trades": 23,
+                  "test_excess": 43.76,
+                  "test_dd_pct": 9.95,
+                  "test_buy_hold_dd_pct": 53.46,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "10/40 s2.0 t2.5",
+                  "train_ret": 13.87,
+                  "train_trades": 38,
+                  "test_ret": -11.35,
+                  "test_trades": 40,
+                  "test_excess": 14.84,
+                  "test_dd_pct": 24.93,
+                  "test_buy_hold_dd_pct": 53.46,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "30/60 s4.0 t5.0",
+                  "train_ret": 21.62,
+                  "train_trades": 15,
+                  "test_ret": 11.24,
+                  "test_trades": 16,
+                  "test_excess": 37.42,
+                  "test_dd_pct": 8.33,
+                  "test_buy_hold_dd_pct": 53.46,
+                  "risk_adjusted_beat": true
+                }
+              ],
+              "fold": 4,
+              "train_start": "2024-06-30 00:00:00",
+              "train_end": "2025-08-29 04:00:00",
+              "test_start": "2025-08-29 08:00:00",
+              "test_end": "2026-10-28 20:00:00"
+            }
+          ]
+        },
+        "donchian": {
+          "symbol": "BTC/USDT",
+          "family": "donchian",
+          "windows": 4,
+          "beat_buy_hold": 2,
+          "beat_buy_hold_pct": 50.0,
+          "risk_adjusted_beat": 1,
+          "risk_adjusted_windows": 4,
+          "risk_adjusted_pct": 25.0,
+          "median_test_ret": 20.82,
+          "median_test_excess": -26.08,
+          "median_regret": -11.25,
+          "median_test_trades": 31.5,
+          "picks": [
+            "30/15",
+            "20/10",
+            "30/15",
+            "30/15"
+          ],
+          "modal_pick": "30/15",
+          "modal_pick_pct": 75.0,
+          "regret_note": "Picking settings on the past landed 11.2 points below that chunk's best settings (median), so selection is mostly noise.",
+          "verdict": "Mixed: beat buy & hold in 2 of 4 unseen chunks -- no reliable edge in this sample.",
+          "rows": [
+            {
+              "family": "donchian",
+              "chosen_params": "30/15",
+              "train_ret": 13.76,
+              "train_trades": 23,
+              "test_ret": 23.1,
+              "test_trades": 24,
+              "test_excess": 59.94,
+              "test_dd_pct": 16.65,
+              "test_buy_hold_dd_pct": 67.21,
+              "risk_adjusted_beat": true,
+              "best_test_params": "20/10",
+              "best_test_ret": 32.75,
+              "regret": -9.65,
+              "candidates": [
+                {
+                  "params": "20/10",
+                  "train_ret": 10.39,
+                  "train_trades": 34,
+                  "test_ret": 32.75,
+                  "test_trades": 31,
+                  "test_excess": 69.58,
+                  "test_dd_pct": 15.59,
+                  "test_buy_hold_dd_pct": 67.21,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "30/15",
+                  "train_ret": 13.76,
+                  "train_trades": 23,
+                  "test_ret": 23.1,
+                  "test_trades": 24,
+                  "test_excess": 59.94,
+                  "test_dd_pct": 16.65,
+                  "test_buy_hold_dd_pct": 67.21,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "55/20",
+                  "train_ret": 3.39,
+                  "train_trades": 18,
+                  "test_ret": 23.68,
+                  "test_trades": 15,
+                  "test_excess": 60.51,
+                  "test_dd_pct": 12.36,
+                  "test_buy_hold_dd_pct": 67.21,
+                  "risk_adjusted_beat": true
+                }
+              ],
+              "fold": 1,
+              "train_start": "2021-01-01 00:00:00",
+              "train_end": "2022-03-02 04:00:00",
+              "test_start": "2022-03-02 08:00:00",
+              "test_end": "2023-05-01 16:00:00"
+            },
+            {
+              "family": "donchian",
+              "chosen_params": "20/10",
+              "train_ret": 32.75,
+              "train_trades": 31,
+              "test_ret": 23.51,
+              "test_trades": 39,
+              "test_excess": -93.59,
+              "test_dd_pct": 18.58,
+              "test_buy_hold_dd_pct": 22.43,
+              "risk_adjusted_beat": false,
+              "best_test_params": "30/15",
+              "best_test_ret": 43.35,
+              "regret": -19.84,
+              "candidates": [
+                {
+                  "params": "20/10",
+                  "train_ret": 32.75,
+                  "train_trades": 31,
+                  "test_ret": 23.51,
+                  "test_trades": 39,
+                  "test_excess": -93.59,
+                  "test_dd_pct": 18.58,
+                  "test_buy_hold_dd_pct": 22.43,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "30/15",
+                  "train_ret": 23.1,
+                  "train_trades": 24,
+                  "test_ret": 43.35,
+                  "test_trades": 28,
+                  "test_excess": -73.75,
+                  "test_dd_pct": 17.72,
+                  "test_buy_hold_dd_pct": 22.43,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "55/20",
+                  "train_ret": 23.68,
+                  "train_trades": 15,
+                  "test_ret": 35.24,
+                  "test_trades": 18,
+                  "test_excess": -81.86,
+                  "test_dd_pct": 15.18,
+                  "test_buy_hold_dd_pct": 22.43,
+                  "risk_adjusted_beat": false
+                }
+              ],
+              "fold": 2,
+              "train_start": "2022-03-02 08:00:00",
+              "train_end": "2023-05-01 16:00:00",
+              "test_start": "2023-05-01 20:00:00",
+              "test_end": "2024-06-29 20:00:00"
+            },
+            {
+              "family": "donchian",
+              "chosen_params": "30/15",
+              "train_ret": 43.35,
+              "train_trades": 28,
+              "test_ret": 18.54,
+              "test_trades": 31,
+              "test_excess": -62.5,
+              "test_dd_pct": 12.36,
+              "test_buy_hold_dd_pct": 30.65,
+              "risk_adjusted_beat": false,
+              "best_test_params": "30/15",
+              "best_test_ret": 18.54,
+              "regret": 0.0,
+              "candidates": [
+                {
+                  "params": "20/10",
+                  "train_ret": 23.51,
+                  "train_trades": 39,
+                  "test_ret": 6.31,
+                  "test_trades": 42,
+                  "test_excess": -74.73,
+                  "test_dd_pct": 18.5,
+                  "test_buy_hold_dd_pct": 30.65,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "30/15",
+                  "train_ret": 43.35,
+                  "train_trades": 28,
+                  "test_ret": 18.54,
+                  "test_trades": 31,
+                  "test_excess": -62.5,
+                  "test_dd_pct": 12.36,
+                  "test_buy_hold_dd_pct": 30.65,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "55/20",
+                  "train_ret": 35.24,
+                  "train_trades": 18,
+                  "test_ret": 8.26,
+                  "test_trades": 22,
+                  "test_excess": -72.78,
+                  "test_dd_pct": 13.11,
+                  "test_buy_hold_dd_pct": 30.65,
+                  "risk_adjusted_beat": false
+                }
+              ],
+              "fold": 3,
+              "train_start": "2023-05-01 20:00:00",
+              "train_end": "2024-06-29 20:00:00",
+              "test_start": "2024-06-30 00:00:00",
+              "test_end": "2025-08-29 04:00:00"
+            },
+            {
+              "family": "donchian",
+              "chosen_params": "30/15",
+              "train_ret": 18.54,
+              "train_trades": 31,
+              "test_ret": -15.85,
+              "test_trades": 32,
+              "test_excess": 10.34,
+              "test_dd_pct": 31.88,
+              "test_buy_hold_dd_pct": 53.46,
+              "risk_adjusted_beat": false,
+              "best_test_params": "20/10",
+              "best_test_ret": -3.01,
+              "regret": -12.84,
+              "candidates": [
+                {
+                  "params": "20/10",
+                  "train_ret": 6.31,
+                  "train_trades": 42,
+                  "test_ret": -3.01,
+                  "test_trades": 39,
+                  "test_excess": 23.18,
+                  "test_dd_pct": 18.98,
+                  "test_buy_hold_dd_pct": 53.46,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "30/15",
+                  "train_ret": 18.54,
+                  "train_trades": 31,
+                  "test_ret": -15.85,
+                  "test_trades": 32,
+                  "test_excess": 10.34,
+                  "test_dd_pct": 31.88,
+                  "test_buy_hold_dd_pct": 53.46,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "55/20",
+                  "train_ret": 8.26,
+                  "train_trades": 22,
+                  "test_ret": -6.88,
+                  "test_trades": 18,
+                  "test_excess": 19.31,
+                  "test_dd_pct": 19.76,
+                  "test_buy_hold_dd_pct": 53.46,
+                  "risk_adjusted_beat": true
+                }
+              ],
+              "fold": 4,
+              "train_start": "2024-06-30 00:00:00",
+              "train_end": "2025-08-29 04:00:00",
+              "test_start": "2025-08-29 08:00:00",
+              "test_end": "2026-10-28 20:00:00"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "symbol": "ETH/USDT",
+      "timeframe": "4h",
+      "bars": 12758,
+      "chunks": 5,
+      "chunk_bars": 2551,
+      "windows": 4,
+      "first_train": "2021-01-01 00:00:00",
+      "last_test": "2026-10-28 20:00:00",
+      "families": {
+        "ema": {
+          "symbol": "ETH/USDT",
+          "family": "ema",
+          "windows": 4,
+          "beat_buy_hold": 2,
+          "beat_buy_hold_pct": 50.0,
+          "risk_adjusted_beat": 2,
+          "risk_adjusted_windows": 4,
+          "risk_adjusted_pct": 50.0,
+          "median_test_ret": 13.37,
+          "median_test_excess": 3.2,
+          "median_regret": -10.13,
+          "median_test_trades": 18.0,
+          "picks": [
+            "30/60 s4.0 t5.0",
+            "30/60 s4.0 t5.0",
+            "30/60 s4.0 t5.0",
+            "10/40 s2.0 t2.5"
+          ],
+          "modal_pick": "30/60 s4.0 t5.0",
+          "modal_pick_pct": 75.0,
+          "regret_note": "Picking settings on the past landed 10.1 points below that chunk's best settings (median), so selection is mostly noise.",
+          "verdict": "Mixed: beat buy & hold in 2 of 4 unseen chunks -- no reliable edge in this sample.",
+          "rows": [
+            {
+              "family": "ema",
+              "chosen_params": "30/60 s4.0 t5.0",
+              "train_ret": 13.23,
+              "train_trades": 12,
+              "test_ret": 17.96,
+              "test_trades": 12,
+              "test_excess": 57.56,
+              "test_dd_pct": 7.86,
+              "test_buy_hold_dd_pct": 74.16,
+              "risk_adjusted_beat": true,
+              "best_test_params": "30/60 s4.0 t5.0",
+              "best_test_ret": 17.96,
+              "regret": 0.0,
+              "candidates": [
+                {
+                  "params": "20/50 s2.5 t3.0",
+                  "train_ret": 4.69,
+                  "train_trades": 19,
+                  "test_ret": 3.63,
+                  "test_trades": 23,
+                  "test_excess": 43.22,
+                  "test_dd_pct": 8.57,
+                  "test_buy_hold_dd_pct": 74.16,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "10/40 s2.0 t2.5",
+                  "train_ret": -0.75,
+                  "train_trades": 35,
+                  "test_ret": -13.65,
+                  "test_trades": 40,
+                  "test_excess": 25.94,
+                  "test_dd_pct": 19.42,
+                  "test_buy_hold_dd_pct": 74.16,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "30/60 s4.0 t5.0",
+                  "train_ret": 13.23,
+                  "train_trades": 12,
+                  "test_ret": 17.96,
+                  "test_trades": 12,
+                  "test_excess": 57.56,
+                  "test_dd_pct": 7.86,
+                  "test_buy_hold_dd_pct": 74.16,
+                  "risk_adjusted_beat": true
+                }
+              ],
+              "fold": 1,
+              "train_start": "2021-01-01 00:00:00",
+              "train_end": "2022-03-02 04:00:00",
+              "test_start": "2022-03-02 08:00:00",
+              "test_end": "2023-05-01 16:00:00"
+            },
+            {
+              "family": "ema",
+              "chosen_params": "30/60 s4.0 t5.0",
+              "train_ret": 17.96,
+              "train_trades": 12,
+              "test_ret": 27.74,
+              "test_trades": 18,
+              "test_excess": -56.78,
+              "test_dd_pct": 9.78,
+              "test_buy_hold_dd_pct": 29.46,
+              "risk_adjusted_beat": false,
+              "best_test_params": "30/60 s4.0 t5.0",
+              "best_test_ret": 27.74,
+              "regret": 0.0,
+              "candidates": [
+                {
+                  "params": "20/50 s2.5 t3.0",
+                  "train_ret": 3.63,
+                  "train_trades": 23,
+                  "test_ret": 16.37,
+                  "test_trades": 23,
+                  "test_excess": -68.15,
+                  "test_dd_pct": 9.78,
+                  "test_buy_hold_dd_pct": 29.46,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "10/40 s2.0 t2.5",
+                  "train_ret": -13.65,
+                  "train_trades": 40,
+                  "test_ret": 7.89,
+                  "test_trades": 39,
+                  "test_excess": -76.63,
+                  "test_dd_pct": 11.65,
+                  "test_buy_hold_dd_pct": 29.46,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "30/60 s4.0 t5.0",
+                  "train_ret": 17.96,
+                  "train_trades": 12,
+                  "test_ret": 27.74,
+                  "test_trades": 18,
+                  "test_excess": -56.78,
+                  "test_dd_pct": 9.78,
+                  "test_buy_hold_dd_pct": 29.46,
+                  "risk_adjusted_beat": false
+                }
+              ],
+              "fold": 2,
+              "train_start": "2022-03-02 08:00:00",
+              "train_end": "2023-05-01 16:00:00",
+              "test_start": "2023-05-01 20:00:00",
+              "test_end": "2024-06-29 20:00:00"
+            },
+            {
+              "family": "ema",
+              "chosen_params": "30/60 s4.0 t5.0",
+              "train_ret": 27.74,
+              "train_trades": 18,
+              "test_ret": 8.78,
+              "test_trades": 18,
+              "test_excess": -21.09,
+              "test_dd_pct": 12.76,
+              "test_buy_hold_dd_pct": 65.11,
+              "risk_adjusted_beat": true,
+              "best_test_params": "10/40 s2.0 t2.5",
+              "best_test_ret": 29.05,
+              "regret": -20.27,
+              "candidates": [
+                {
+                  "params": "20/50 s2.5 t3.0",
+                  "train_ret": 16.37,
+                  "train_trades": 23,
+                  "test_ret": 13.8,
+                  "test_trades": 23,
+                  "test_excess": -16.08,
+                  "test_dd_pct": 10.25,
+                  "test_buy_hold_dd_pct": 65.11,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "10/40 s2.0 t2.5",
+                  "train_ret": 7.89,
+                  "train_trades": 39,
+                  "test_ret": 29.05,
+                  "test_trades": 46,
+                  "test_excess": -0.82,
+                  "test_dd_pct": 18.34,
+                  "test_buy_hold_dd_pct": 65.11,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "30/60 s4.0 t5.0",
+                  "train_ret": 27.74,
+                  "train_trades": 18,
+                  "test_ret": 8.78,
+                  "test_trades": 18,
+                  "test_excess": -21.09,
+                  "test_dd_pct": 12.76,
+                  "test_buy_hold_dd_pct": 65.11,
+                  "risk_adjusted_beat": true
+                }
+              ],
+              "fold": 3,
+              "train_start": "2023-05-01 20:00:00",
+              "train_end": "2024-06-29 20:00:00",
+              "test_start": "2024-06-30 00:00:00",
+              "test_end": "2025-08-29 04:00:00"
+            },
+            {
+              "family": "ema",
+              "chosen_params": "10/40 s2.0 t2.5",
+              "train_ret": 29.05,
+              "train_trades": 46,
+              "test_ret": -18.15,
+              "test_trades": 39,
+              "test_excess": 27.48,
+              "test_dd_pct": 23.54,
+              "test_buy_hold_dd_pct": 67.41,
+              "risk_adjusted_beat": false,
+              "best_test_params": "20/50 s2.5 t3.0",
+              "best_test_ret": 12.22,
+              "regret": -30.37,
+              "candidates": [
+                {
+                  "params": "20/50 s2.5 t3.0",
+                  "train_ret": 13.8,
+                  "train_trades": 23,
+                  "test_ret": 12.22,
+                  "test_trades": 24,
+                  "test_excess": 57.85,
+                  "test_dd_pct": 17.48,
+                  "test_buy_hold_dd_pct": 67.41,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "10/40 s2.0 t2.5",
+                  "train_ret": 29.05,
+                  "train_trades": 46,
+                  "test_ret": -18.15,
+                  "test_trades": 39,
+                  "test_excess": 27.48,
+                  "test_dd_pct": 23.54,
+                  "test_buy_hold_dd_pct": 67.41,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "30/60 s4.0 t5.0",
+                  "train_ret": 8.78,
+                  "train_trades": 18,
+                  "test_ret": 7.72,
+                  "test_trades": 20,
+                  "test_excess": 53.35,
+                  "test_dd_pct": 13.39,
+                  "test_buy_hold_dd_pct": 67.41,
+                  "risk_adjusted_beat": true
+                }
+              ],
+              "fold": 4,
+              "train_start": "2024-06-30 00:00:00",
+              "train_end": "2025-08-29 04:00:00",
+              "test_start": "2025-08-29 08:00:00",
+              "test_end": "2026-10-28 20:00:00"
+            }
+          ]
+        },
+        "donchian": {
+          "symbol": "ETH/USDT",
+          "family": "donchian",
+          "windows": 4,
+          "beat_buy_hold": 2,
+          "beat_buy_hold_pct": 50.0,
+          "risk_adjusted_beat": 3,
+          "risk_adjusted_windows": 4,
+          "risk_adjusted_pct": 75.0,
+          "median_test_ret": 20.16,
+          "median_test_excess": 16.64,
+          "median_regret": -5.02,
+          "median_test_trades": 23.5,
+          "picks": [
+            "55/20",
+            "30/15",
+            "55/20",
+            "30/15"
+          ],
+          "modal_pick": "30/15",
+          "modal_pick_pct": 50.0,
+          "regret_note": "Picking settings on the past landed 5.0 points below that chunk's best settings (median), so selection is mostly noise.",
+          "verdict": "Beat buy & hold in only 2 of 4 unseen chunks, but earned more per unit of drawdown in 3 of 4 -- a lower-risk path, not a higher-return one.",
+          "rows": [
+            {
+              "family": "donchian",
+              "chosen_params": "55/20",
+              "train_ret": 5.67,
+              "train_trades": 21,
+              "test_ret": 19.55,
+              "test_trades": 17,
+              "test_excess": 59.15,
+              "test_dd_pct": 11.41,
+              "test_buy_hold_dd_pct": 74.16,
+              "risk_adjusted_beat": true,
+              "best_test_params": "30/15",
+              "best_test_ret": 23.85,
+              "regret": -4.3,
+              "candidates": [
+                {
+                  "params": "20/10",
+                  "train_ret": -13.22,
+                  "train_trades": 45,
+                  "test_ret": 19.51,
+                  "test_trades": 38,
+                  "test_excess": 59.1,
+                  "test_dd_pct": 12.53,
+                  "test_buy_hold_dd_pct": 74.16,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "30/15",
+                  "train_ret": -6.7,
+                  "train_trades": 33,
+                  "test_ret": 23.85,
+                  "test_trades": 27,
+                  "test_excess": 63.45,
+                  "test_dd_pct": 14.13,
+                  "test_buy_hold_dd_pct": 74.16,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "55/20",
+                  "train_ret": 5.67,
+                  "train_trades": 21,
+                  "test_ret": 19.55,
+                  "test_trades": 17,
+                  "test_excess": 59.15,
+                  "test_dd_pct": 11.41,
+                  "test_buy_hold_dd_pct": 74.16,
+                  "risk_adjusted_beat": true
+                }
+              ],
+              "fold": 1,
+              "train_start": "2021-01-01 00:00:00",
+              "train_end": "2022-03-02 04:00:00",
+              "test_start": "2022-03-02 08:00:00",
+              "test_end": "2023-05-01 16:00:00"
+            },
+            {
+              "family": "donchian",
+              "chosen_params": "30/15",
+              "train_ret": 23.85,
+              "train_trades": 27,
+              "test_ret": 20.77,
+              "test_trades": 28,
+              "test_excess": -63.75,
+              "test_dd_pct": 21.31,
+              "test_buy_hold_dd_pct": 29.46,
+              "risk_adjusted_beat": false,
+              "best_test_params": "55/20",
+              "best_test_ret": 31.47,
+              "regret": -10.7,
+              "candidates": [
+                {
+                  "params": "20/10",
+                  "train_ret": 19.51,
+                  "train_trades": 38,
+                  "test_ret": 20.95,
+                  "test_trades": 34,
+                  "test_excess": -63.57,
+                  "test_dd_pct": 18.29,
+                  "test_buy_hold_dd_pct": 29.46,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "30/15",
+                  "train_ret": 23.85,
+                  "train_trades": 27,
+                  "test_ret": 20.77,
+                  "test_trades": 28,
+                  "test_excess": -63.75,
+                  "test_dd_pct": 21.31,
+                  "test_buy_hold_dd_pct": 29.46,
+                  "risk_adjusted_beat": false
+                },
+                {
+                  "params": "55/20",
+                  "train_ret": 19.55,
+                  "train_trades": 17,
+                  "test_ret": 31.47,
+                  "test_trades": 19,
+                  "test_excess": -53.05,
+                  "test_dd_pct": 17.57,
+                  "test_buy_hold_dd_pct": 29.46,
+                  "risk_adjusted_beat": false
+                }
+              ],
+              "fold": 2,
+              "train_start": "2022-03-02 08:00:00",
+              "train_end": "2023-05-01 16:00:00",
+              "test_start": "2023-05-01 20:00:00",
+              "test_end": "2024-06-29 20:00:00"
+            },
+            {
+              "family": "donchian",
+              "chosen_params": "55/20",
+              "train_ret": 31.47,
+              "train_trades": 19,
+              "test_ret": 25.87,
+              "test_trades": 20,
+              "test_excess": -4.0,
+              "test_dd_pct": 13.71,
+              "test_buy_hold_dd_pct": 65.11,
+              "risk_adjusted_beat": true,
+              "best_test_params": "30/15",
+              "best_test_ret": 31.6,
+              "regret": -5.73,
+              "candidates": [
+                {
+                  "params": "20/10",
+                  "train_ret": 20.95,
+                  "train_trades": 34,
+                  "test_ret": 15.35,
+                  "test_trades": 42,
+                  "test_excess": -14.53,
+                  "test_dd_pct": 21.13,
+                  "test_buy_hold_dd_pct": 65.11,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "30/15",
+                  "train_ret": 20.77,
+                  "train_trades": 28,
+                  "test_ret": 31.6,
+                  "test_trades": 27,
+                  "test_excess": 1.73,
+                  "test_dd_pct": 15.29,
+                  "test_buy_hold_dd_pct": 65.11,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "55/20",
+                  "train_ret": 31.47,
+                  "train_trades": 19,
+                  "test_ret": 25.87,
+                  "test_trades": 20,
+                  "test_excess": -4.0,
+                  "test_dd_pct": 13.71,
+                  "test_buy_hold_dd_pct": 65.11,
+                  "risk_adjusted_beat": true
+                }
+              ],
+              "fold": 3,
+              "train_start": "2023-05-01 20:00:00",
+              "train_end": "2024-06-29 20:00:00",
+              "test_start": "2024-06-30 00:00:00",
+              "test_end": "2025-08-29 04:00:00"
+            },
+            {
+              "family": "donchian",
+              "chosen_params": "30/15",
+              "train_ret": 31.6,
+              "train_trades": 27,
+              "test_ret": -8.35,
+              "test_trades": 27,
+              "test_excess": 37.28,
+              "test_dd_pct": 25.73,
+              "test_buy_hold_dd_pct": 67.41,
+              "risk_adjusted_beat": true,
+              "best_test_params": "20/10",
+              "best_test_ret": -6.28,
+              "regret": -2.07,
+              "candidates": [
+                {
+                  "params": "20/10",
+                  "train_ret": 15.35,
+                  "train_trades": 42,
+                  "test_ret": -6.28,
+                  "test_trades": 41,
+                  "test_excess": 39.35,
+                  "test_dd_pct": 29.71,
+                  "test_buy_hold_dd_pct": 67.41,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "30/15",
+                  "train_ret": 31.6,
+                  "train_trades": 27,
+                  "test_ret": -8.35,
+                  "test_trades": 27,
+                  "test_excess": 37.28,
+                  "test_dd_pct": 25.73,
+                  "test_buy_hold_dd_pct": 67.41,
+                  "risk_adjusted_beat": true
+                },
+                {
+                  "params": "55/20",
+                  "train_ret": 25.87,
+                  "train_trades": 20,
+                  "test_ret": -11.68,
+                  "test_trades": 17,
+                  "test_excess": 33.96,
+                  "test_dd_pct": 18.1,
+                  "test_buy_hold_dd_pct": 67.41,
+                  "risk_adjusted_beat": true
+                }
+              ],
+              "fold": 4,
+              "train_start": "2024-06-30 00:00:00",
+              "train_end": "2025-08-29 04:00:00",
+              "test_start": "2025-08-29 08:00:00",
+              "test_end": "2026-10-28 20:00:00"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "headline": {
+    "ema": {
+      "windows": 8,
+      "beat_buy_hold": 4,
+      "beat_buy_hold_pct": 50.0,
+      "risk_adjusted_beat": 5,
+      "risk_adjusted_windows": 8,
+      "risk_adjusted_pct": 62.5,
+      "markets": [
+        "BTC/USDT",
+        "ETH/USDT"
+      ],
+      "verdict": "Mixed: beat buy & hold in 4 of 8 unseen chunks -- no reliable edge in this sample.",
+      "median_test_excess": -3.9
+    },
+    "donchian": {
+      "windows": 8,
+      "beat_buy_hold": 4,
+      "beat_buy_hold_pct": 50.0,
+      "risk_adjusted_beat": 4,
+      "risk_adjusted_windows": 8,
+      "risk_adjusted_pct": 50.0,
+      "markets": [
+        "BTC/USDT",
+        "ETH/USDT"
+      ],
+      "verdict": "Mixed: beat buy & hold in 4 of 8 unseen chunks -- no reliable edge in this sample.",
+      "median_test_excess": -4.72
+    }
+  }
+}

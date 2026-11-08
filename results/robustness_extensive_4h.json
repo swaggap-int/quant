@@ -1,0 +1,178 @@
+{
+  "window": {
+    "start": "2021-01-01",
+    "end": "2026-10-24 00:00:00",
+    "provider": "auto",
+    "fee_bps": 10.0,
+    "slippage_bps": 5.0
+  },
+  "grid_size": 3,
+  "summary": {
+    "planned": 3,
+    "ran": 3,
+    "errored": 0,
+    "completed_pct": 100.0,
+    "grid_size": 3,
+    "min_trades": 15,
+    "beat_buy_hold": 0,
+    "beat_buy_hold_pct": 0.0,
+    "clean": 0,
+    "clean_pct": 0.0,
+    "positive": 3,
+    "positive_pct": 100.0,
+    "median_excess_pct": -128.98901844587905,
+    "p25_excess_pct": -149.70521869750667,
+    "p75_excess_pct": -91.59409319336444,
+    "median_sharpe": 0.6565921642352128,
+    "median_total_return_pct": 47.4120482659568,
+    "median_max_drawdown_pct": -13.178211676382778,
+    "median_bars_in_market_pct": 17.8725744363265,
+    "total_trades": 400,
+    "best": {
+      "label": "BTC/USDT 4h  30/60 s4.0 t5.0",
+      "excess_pct": -54.19916794084982,
+      "total_return_pct": 122.20189877098603,
+      "params": {
+        "atr_period": 14,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true,
+        "fast": 30,
+        "slow": 60,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0
+      }
+    },
+    "worst": {
+      "label": "BTC/USDT 4h  10/40 s2.0 t2.5",
+      "excess_pct": -170.4214189491343
+    },
+    "best_share_pct": 0.0,
+    "median_p_value": 0.0196078431372549,
+    "by_market": [
+      {
+        "market": "BTC/USDT 4h",
+        "cells": 3,
+        "ran": 3,
+        "beat_buy_hold": 0,
+        "beat_buy_hold_pct": 0.0,
+        "median_excess_pct": -128.98901844587905,
+        "median_sharpe": 0.6565921642352128,
+        "trades": 400,
+        "best_label": "30/60 s4.0 t5.0",
+        "best_excess_pct": -54.19916794084982,
+        "best_total_return_pct": 122.20189877098603,
+        "actual_return_pct": 47.4120482659568,
+        "null_median_pct": -4.761270946048596,
+        "null_p95_pct": 32.70307520927028,
+        "p_value": 0.0196078431372549,
+        "expected_max_pct": 14.295231083822479,
+        "null_note": ""
+      }
+    ],
+    "errors": [],
+    "verdict": "It beat buy & hold in only 0% of the 3 combinations (median excess -129.0 points). As a way to beat simply holding, it does not work on any market or setting tested here \u2014 which is what a low-exposure system looks like in a market that mostly rose. Not one cell produced positive excess to concentrate. Random entries drawing the same number of trades, holding times, size, stops and costs matched or beat it only 2% of the time (median across markets), so the timing carries information. Both readings hold at once: the entries carry information against random timing, but a system that is flat most of the time still trails buy & hold in a market that rose. Judge it on risk-adjusted terms, not on headline return."
+  },
+  "cells": [
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "atr_period": 14,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true,
+        "fast": 20,
+        "slow": 50,
+        "atr_stop_mult": 2.5,
+        "trail_mult": 3.0
+      },
+      "params_label": "20/50 s2.5 t3.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 47.4120482659568,
+        "buy_hold_return_pct": 176.40106671183585,
+        "excess_return_pct": -128.98901844587905,
+        "sharpe": 0.6565921642352128,
+        "max_drawdown_pct": -13.178211676382778,
+        "trades": 116,
+        "win_rate_pct": 37.93103448275862,
+        "profit_factor": 1.4890155724259002,
+        "bars_in_market_pct": 16.11281326105743
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "atr_period": 14,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true,
+        "fast": 10,
+        "slow": 40,
+        "atr_stop_mult": 2.0,
+        "trail_mult": 2.5
+      },
+      "params_label": "10/40 s2.0 t2.5",
+      "error": null,
+      "result": {
+        "total_return_pct": 5.979647762701545,
+        "buy_hold_return_pct": 176.40106671183585,
+        "excess_return_pct": -170.4214189491343,
+        "sharpe": 0.14110477888643336,
+        "max_drawdown_pct": -31.48034899115524,
+        "trades": 196,
+        "win_rate_pct": 32.142857142857146,
+        "profit_factor": 1.0335252042917566,
+        "bars_in_market_pct": 17.8725744363265
+      },
+      "good": false,
+      "clean": false
+    },
+    {
+      "market": "BTC/USDT 4h",
+      "params": {
+        "atr_period": 14,
+        "risk_pct": 0.02,
+        "max_weight": 1.0,
+        "trend_filter": true,
+        "fast": 30,
+        "slow": 60,
+        "atr_stop_mult": 4.0,
+        "trail_mult": 5.0
+      },
+      "params_label": "30/60 s4.0 t5.0",
+      "error": null,
+      "result": {
+        "total_return_pct": 122.20189877098603,
+        "buy_hold_return_pct": 176.40106671183585,
+        "excess_return_pct": -54.19916794084982,
+        "sharpe": 1.3146312767604,
+        "max_drawdown_pct": -11.232161734653534,
+        "trades": 88,
+        "win_rate_pct": 39.77272727272727,
+        "profit_factor": 2.4029027173206057,
+        "bars_in_market_pct": 27.983345117448344
+      },
+      "good": false,
+      "clean": false
+    }
+  ],
+  "nulls": [
+    {
+      "market": "BTC/USDT 4h",
+      "params": "20/50 s2.5 t3.0",
+      "actual_return_pct": 47.4120482659568,
+      "actual_trades": 116,
+      "null_runs": 50,
+      "null_median_pct": -4.761270946048596,
+      "null_p95_pct": 32.70307520927028,
+      "expected_max_pct": 14.295231083822479,
+      "selection_n": 3,
+      "p_value": 0.0196078431372549,
+      "note": ""
+    }
+  ],
+  "null_reference": "20/50 s2.5 t3.0"
+}

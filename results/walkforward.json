@@ -1,0 +1,61 @@
+{
+  "total_bars": 2122,
+  "train_bars": 1485,
+  "test_bars": 637,
+  "rows": [
+    {
+      "family": "ema",
+      "params": "10/40",
+      "train_ret": 19.03,
+      "train_trades": 18,
+      "test_ret": 2.06,
+      "test_trades": 8,
+      "test_excess": 23.95
+    },
+    {
+      "family": "ema",
+      "params": "20/50",
+      "train_ret": 18.3,
+      "train_trades": 11,
+      "test_ret": 0.04,
+      "test_trades": 6,
+      "test_excess": 21.93
+    },
+    {
+      "family": "ema",
+      "params": "30/60",
+      "train_ret": 12.08,
+      "train_trades": 7,
+      "test_ret": -0.17,
+      "test_trades": 5,
+      "test_excess": 21.72
+    },
+    {
+      "family": "donchian",
+      "params": "20/10",
+      "train_ret": 47.19,
+      "train_trades": 22,
+      "test_ret": -1.62,
+      "test_trades": 10,
+      "test_excess": 20.27
+    },
+    {
+      "family": "donchian",
+      "params": "30/15",
+      "train_ret": 35.52,
+      "train_trades": 16,
+      "test_ret": -1.95,
+      "test_trades": 8,
+      "test_excess": 19.94
+    },
+    {
+      "family": "donchian",
+      "params": "55/20",
+      "train_ret": 28.18,
+      "train_trades": 12,
+      "test_ret": -1.22,
+      "test_trades": 6,
+      "test_excess": 20.67
+    }
+  ]
+}

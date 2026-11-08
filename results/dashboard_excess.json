@@ -1,0 +1,119 @@
+{
+  "generated": "2026-10-21T23:17:54Z",
+  "based_on": "results/status.json + results/explore_notes.json (frozen breadcrumb from the current sweep)",
+  "paper": {
+    "symbol": "BTCUSDT",
+    "timeframe": "1d",
+    "start": "2021-01-01 00:00:00",
+    "end": "2026-10-16 00:00:00",
+    "file": "BTCUSDT_1d_ema-atr-trend_20261016T100000Z.json",
+    "trades": 17,
+    "total_return_pct": 18.532484322115316,
+    "buy_hold_return_pct": 180.12652323181237,
+    "excess_return_pct": -161.59403890969705,
+    "sharpe": 0.595960233305202,
+    "max_drawdown_pct": -7.163900534690459,
+    "fees_pct_of_start": 0.9597012574499365,
+    "bars_in_market_pct": 17.06855791962175,
+    "verdict": "Read with care: only 17 trades \u2014 too few to be calm about; it did not beat buy & hold in this window."
+  },
+  "breadth": {
+    "planned": 60,
+    "ran": 60,
+    "beat_buy_hold_pct": 0.0,
+    "clean_pct": 0.0,
+    "median_excess_pct": -170.00504323926623,
+    "median_total_return_pct": 18.77555039076454,
+    "median_sharpe": 0.5071529121684613,
+    "median_max_drawdown_pct": -11.642615999525024,
+    "total_trades": 4039,
+    "best_cell": "BTC/USDT 4h  30/60 s4.0 t5.0",
+    "best_excess_pct": -56.36086295773248,
+    "by_market": [
+      {
+        "market": "BTC/USDT 1d",
+        "cells": 15,
+        "beat_buy_hold_pct": 0.0,
+        "median_excess_pct": -167.4134177431611,
+        "median_sharpe": 0.5817669704476649,
+        "trades": 244,
+        "best_excess_pct": -143.6863878552155
+      },
+      {
+        "market": "ETH/USDT 1d",
+        "cells": 15,
+        "beat_buy_hold_pct": 0.0,
+        "median_excess_pct": -231.68684802523,
+        "median_sharpe": 0.153565429485399,
+        "trades": 270,
+        "best_excess_pct": -193.65019773625676
+      },
+      {
+        "market": "BTC/USDT 4h",
+        "cells": 15,
+        "beat_buy_hold_pct": 0.0,
+        "median_excess_pct": -118.19169188702125,
+        "median_sharpe": 0.7601914707273316,
+        "trades": 1758,
+        "best_excess_pct": -56.36086295773248
+      },
+      {
+        "market": "ETH/USDT 4h",
+        "cells": 15,
+        "beat_buy_hold_pct": 0.0,
+        "median_excess_pct": -177.96748635214755,
+        "median_sharpe": 0.6639865936883314,
+        "trades": 1767,
+        "best_excess_pct": -127.83196254318571
+      }
+    ],
+    "null_tests": [
+      {
+        "market": "BTC/USDT 1d",
+        "actual_return_pct": 18.532484322115316,
+        "null_median_pct": 4.32270407077694,
+        "null_p95_pct": 28.0731648509896,
+        "p_value": 0.13930348258706468
+      },
+      {
+        "market": "ETH/USDT 1d",
+        "actual_return_pct": 3.9909645262442117,
+        "null_median_pct": 2.7916677259830713,
+        "null_p95_pct": 20.054019978331592,
+        "p_value": 0.44776119402985076
+      },
+      {
+        "market": "BTC/USDT 4h",
+        "actual_return_pct": 49.371000116190885,
+        "null_median_pct": -10.34592237066802,
+        "null_p95_pct": 39.416935611179014,
+        "p_value": 0.03482587064676617
+      },
+      {
+        "market": "ETH/USDT 4h",
+        "actual_return_pct": 55.712783389958375,
+        "null_median_pct": -3.436048035396988,
+        "null_p95_pct": 44.97785692582075,
+        "p_value": 0.03980099502487562
+      }
+    ],
+    "interpretation": "It beat buy & hold in only 0% of the 60 combinations (median excess -170.0 points). As a way to beat simply holding, it does not work on any market or setting tested here \u2014 which is what a low-exposure system looks like in a market that mostly rose. Not one cell produced positive excess to concentrate. Random entries drawing the same number of trades, holding times, size, stops and costs matched or beat it only 9% of the time (median across markets), so the timing carries information. Both readings hold at once: the entries carry information against random timing, but a system that is flat most of the time still trails buy & hold in a market that rose. Judge it on risk-adjusted terms, not on headline return.",
+    "next_question": "Is the excess problem the same everywhere, or is there a better market/timeframe/setting shape worth chasing next?"
+  },
+  "notes": [],
+  "verification": {
+    "breadth_median_matches_robustness": true,
+    "breadth_best_cell_matches_robustness": true,
+    "breadth_planned_matches_robustness": true,
+    "breadth_nulls_count_matches_robustness": true,
+    "breadth_median_value": -170.00504323926623,
+    "robustness_median_excess_pct": -170.00504323926623,
+    "paper_excess_value": -161.59403890969705,
+    "paper_excess_source": "C:\\Users\\HP\\Desktop\\quant\\results\\paper\\BTCUSDT_1d_ema-atr-trend_20261016T100000Z.json",
+    "paper_excess_source_exists": true,
+    "paper_excess_source_matches_active_artifact": true,
+    "paper_excess_from_status_reading": true,
+    "note": "paper.excess_return_pct is the active paper artifact's single-window excess; it is not a sweep result. results/robustness.json is a multi-cell sweep summary and has no equivalent single-paper excess field, so this builder does not assert a live cross-check for paper.excess_return_pct here. Do not hand-edit this note to make paper.excess_return_pct and breadth.median_excess_pct look equal. They measure different things on purpose. paper.excess_return_pct and breadth.median_excess_pct are different measurements by design: one is the active paper artifact's single-window excess vs buy & hold for that one run; the other is the median across the swept cells in the current robustness study.",
+    "type": "applied"
+  }
+}

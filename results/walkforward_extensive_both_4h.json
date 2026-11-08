@@ -1,0 +1,72 @@
+{
+  "symbol": "BTC/USDT",
+  "timeframe": "4h",
+  "total_bars": 12729,
+  "train_bars": 8910,
+  "test_bars": 3819,
+  "rows": [
+    {
+      "family": "ema",
+      "params": "20/50 s2.5 t3.0",
+      "train_ret": 36.14,
+      "train_trades": 80,
+      "test_ret": 10.0,
+      "test_trades": 35,
+      "test_excess": 32.68
+    },
+    {
+      "family": "ema",
+      "params": "10/40 s2.0 t2.5",
+      "train_ret": 29.0,
+      "train_trades": 134,
+      "test_ret": -16.64,
+      "test_trades": 61,
+      "test_excess": 6.03
+    },
+    {
+      "family": "ema",
+      "params": "30/60 s4.0 t5.0",
+      "train_ret": 94.48,
+      "train_trades": 62,
+      "test_ret": 16.43,
+      "test_trades": 24,
+      "test_excess": 39.1
+    },
+    {
+      "family": "donchian",
+      "params": "20/10",
+      "train_ret": 111.84,
+      "train_trades": 124,
+      "test_ret": -14.68,
+      "test_trades": 63,
+      "test_excess": 7.99
+    },
+    {
+      "family": "donchian",
+      "params": "30/15",
+      "train_ret": 130.04,
+      "train_trades": 93,
+      "test_ret": -15.77,
+      "test_trades": 47,
+      "test_excess": 6.9
+    },
+    {
+      "family": "donchian",
+      "params": "55/20",
+      "train_ret": 87.45,
+      "train_trades": 63,
+      "test_ret": -7.57,
+      "test_trades": 28,
+      "test_excess": 15.1
+    }
+  ],
+  "best_on_train": {
+    "family": "donchian",
+    "params": "30/15",
+    "train_ret": 130.04,
+    "train_trades": 93,
+    "test_ret": -15.77,
+    "test_trades": 47,
+    "test_excess": 6.9
+  }
+}

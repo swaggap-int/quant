@@ -1,0 +1,21 @@
+{
+  "paper": {
+    "latest_active": "C:/Users/HP/Desktop/quant/results/paper/BTCUSDT_1d_ema-atr-trend_20261016T100000Z.json",
+    "latest_metrics": {
+      "symbol": "BTCUSDT",
+      "timeframe": "1d",
+      "start": "2021-01-01 00:00:00",
+      "end": "2026-10-16 00:00:00",
+      "file": "BTCUSDT_1d_ema-atr-trend_20261016T100000Z.json",
+      "trades": 17,
+      "total_return_pct": 18.532484322115316,
+      "buy_hold_return_pct": 180.12652323181237,
+      "excess_return_pct": -161.59403890969705,
+      "sharpe": 0.595960233305202,
+      "max_drawdown_pct": -7.163900534690459,
+      "fees_pct_of_start": 0.9597012574499365,
+      "bars_in_market_pct": 17.06855791962175,
+      "verdict": "Read with care: only 17 trades \u2014 too few to be calm about; it did not beat buy & hold in this window."
+    }
+  }
+}

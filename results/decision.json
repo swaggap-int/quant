@@ -1,0 +1,21 @@
+{
+  "decision_at": "2026-10-16T14:57:00Z",
+  "current_sweep": "closed",
+  "status_source": "results/status.json",
+  "paper_sweep": {
+    "closed": true,
+    "latest": "results/paper/BTCUSDT_1d_ema-atr-trend_20261016T100000Z.json",
+    "verdict": "Read with care: only 17 trades — too few to be calm about; it did not beat buy & hold in this window."
+  },
+  "robustness_sweep": {
+    "closed": true,
+    "file": "results/robustness.json",
+    "completed_pct": 100.0,
+    "beat_buy_hold_pct": 0.0,
+    "clean_pct": 0.0,
+    "median_excess_pct": -172.49,
+    "note": "12 cells ran, 4 markets x 3 settings, luck tests included."
+  },
+  "next_decision": "Keep the current sweep closed. Do not re-run this sweep as-is. The only open item is the next decision, chosen from: keep this result and move on, expand the sweep, investigate the large negative excess, or clean up stale paper artifacts. The current snapshot for that decision is results/status.json and results/decision.json.",
+  "closed_by_user_prompt": "Keep the current sweep closed and move to the next decision, using results/status.json and results/decision.json as the source of truth."
+}
