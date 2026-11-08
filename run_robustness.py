@@ -10,6 +10,10 @@ Examples
     python run_robustness.py --null-runs 0             # breadth only, no luck test
     python run_robustness.py --json --out results/robustness.json
 
+Saving to the default results/robustness.json also refreshes the dashboard's
+frozen breadth read and excess snapshot. Use --no-dashboard-refresh to skip
+that follow-up.
+
 The report's headline is "beat buy & hold in X% of combinations". The luck test
 is the honest part: it re-runs the same engine on coin-flip entry timing with
 the same trade count, holding times, sizing, stops, fees and slippage.
@@ -91,6 +95,11 @@ def build_parser() -> argparse.ArgumentParser:
     out.add_argument("--out", default=None, help=f"save the study here (default {DEFAULT_OUT})")
     out.add_argument("--no-save", action="store_true", help="print only, write nothing")
     out.add_argument("--quiet", action="store_true", help="suppress progress chatter")
+    out.add_argument(
+        "--no-dashboard-refresh",
+        action="store_true",
+        help="skip refreshing results/explore_notes.json and results/dashboard_excess.json after saving",
+    )
     return p
 
 
@@ -165,24 +174,71 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
+    merged = _merge_reports(parts)
     if args.json:
-        print(json.dumps(_merge_reports(parts).to_dict(), indent=2, allow_nan=False))
+        print(json.dumps(merged.to_dict(), indent=2, allow_nan=False))
     else:
         for part in parts:
             print(part)
             print()
-        print(_merge_reports(parts))
+        print(merged)
         print()
 
     if not args.no_save:
         path = Path(args.out) if args.out else DEFAULT_OUT
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(_merge_reports(parts).to_dict(), indent=2, allow_nan=False), encoding="utf-8")
+        path.write_text(json.dumps(merged.to_dict(), indent=2, allow_nan=False), encoding="utf-8")
         if not args.json:
             print(f" saved -> {path}")
 
-    merged = _merge_reports(parts)
+        if not args.no_dashboard_refresh:
+            if merged.summary["ran"]:
+                refresh_rc = _refresh_dashboard_excess(path, json_mode=args.json)
+                if refresh_rc != 0:
+                    return refresh_rc
+            else:
+                print(
+                    "dashboard refresh skipped: sweep produced no results",
+                    file=sys.stderr,
+                )
+
     return 0 if merged.summary["ran"] else 2
+
+
+def _refresh_dashboard_excess(out_path: Path, *, json_mode: bool) -> int:
+    """Refresh the frozen breadth read and dashboard excess snapshot.
+
+    Only the default output feeds the dashboard. A custom --out is a separate
+    study and must not silently overwrite the dashboard's frozen reads.
+    """
+    if Path(out_path).resolve() != DEFAULT_OUT.resolve():
+        print(
+            "dashboard refresh skipped: output is not results/robustness.json",
+            file=sys.stderr,
+        )
+        return 0
+
+    from contextlib import redirect_stdout
+
+    from quant import build_dashboard_excess, regenerate_frozen_reads
+
+    # Keep --json stdout machine-readable even though the refresh steps print
+    # their progress. Normal runs can show that progress on stdout.
+    sink = sys.stderr if json_mode else sys.stdout
+    stage = "frozen-read refresh"
+    try:
+        with redirect_stdout(sink):
+            rc = regenerate_frozen_reads.main()
+            if rc == 0:
+                stage = "dashboard excess rebuild"
+                rc = build_dashboard_excess.main()
+    except Exception as exc:
+        print(f"error: {stage} failed: {exc}", file=sys.stderr)
+        return 1
+
+    if rc != 0:
+        print(f"error: {stage} failed ({rc})", file=sys.stderr)
+    return rc
 
 
 def _progress(message: str) -> None:

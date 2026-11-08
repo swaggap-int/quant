@@ -800,3 +800,100 @@ class TestExcessBuildGuards(unittest.TestCase):
 
     def test_excess_sources_fresh_returns_false_when_out_is_missing(self) -> None:
         self.assertFalse(_excess_sources_fresh(self.dir / "nonexistent.json"))
+
+
+class TestRobustnessDashboardRefresh(unittest.TestCase):
+    """A saved sweep refreshes the frozen breadth and excess snapshot."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self._tmp.name)
+        self.default = self.dir / "results" / "robustness.json"
+        self.default.parent.mkdir()
+        self.default.write_text("{}", encoding="utf-8")
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_default_output_refreshes_chain_in_order(self) -> None:
+        import run_robustness
+
+        calls: list[str] = []
+        with patch.object(run_robustness, "DEFAULT_OUT", self.default), \
+             patch("quant.regenerate_frozen_reads.main", side_effect=lambda: calls.append("regen") or 0), \
+             patch("quant.build_dashboard_excess.main", side_effect=lambda: calls.append("build") or 0):
+            rc = run_robustness._refresh_dashboard_excess(self.default, json_mode=True)
+
+        self.assertEqual(rc, 0)
+        self.assertEqual(calls, ["regen", "build"])
+
+    def test_custom_output_does_not_touch_dashboard(self) -> None:
+        import run_robustness
+
+        custom = self.dir / "elsewhere.json"
+        custom.write_text("{}", encoding="utf-8")
+        with patch.object(run_robustness, "DEFAULT_OUT", self.default), \
+             patch("quant.regenerate_frozen_reads.main") as regen, \
+             patch("quant.build_dashboard_excess.main") as build:
+            rc = run_robustness._refresh_dashboard_excess(custom, json_mode=True)
+
+        self.assertEqual(rc, 0)
+        regen.assert_not_called()
+        build.assert_not_called()
+
+    def test_frozen_read_failure_skips_builder(self) -> None:
+        import run_robustness
+
+        calls: list[str] = []
+        with patch.object(run_robustness, "DEFAULT_OUT", self.default), \
+             patch("quant.regenerate_frozen_reads.main", side_effect=lambda: calls.append("regen") or 3), \
+             patch("quant.build_dashboard_excess.main", side_effect=lambda: calls.append("build") or 0):
+            rc = run_robustness._refresh_dashboard_excess(self.default, json_mode=True)
+
+        self.assertEqual(rc, 3)
+        self.assertEqual(calls, ["regen"])
+
+    def test_main_refreshes_after_default_save(self) -> None:
+        import contextlib
+        import io
+        import run_robustness
+
+        class FakeReport:
+            summary = {"ran": 1, "planned": 1}
+
+            def to_dict(self) -> dict:
+                return {"summary": self.summary}
+
+            def __str__(self) -> str:
+                return "fake report"
+
+        output = io.StringIO()
+        with patch.object(run_robustness, "DEFAULT_OUT", self.default), \
+             patch.object(run_robustness, "run_study", return_value=FakeReport()), \
+             patch.object(run_robustness, "_refresh_dashboard_excess", return_value=0) as refresh:
+            with contextlib.redirect_stdout(output):
+                rc = run_robustness.main(["--json", "--quiet"])
+
+        self.assertEqual(rc, 0)
+        self.assertEqual(json.loads(output.getvalue()), {"summary": FakeReport.summary})
+        refresh.assert_called_once_with(self.default, json_mode=True)
+
+    def test_no_dashboard_refresh_skips_refresh(self) -> None:
+        import run_robustness
+
+        class FakeReport:
+            summary = {"ran": 1, "planned": 1}
+
+            def to_dict(self) -> dict:
+                return {"summary": self.summary}
+
+            def __str__(self) -> str:
+                return "fake report"
+
+        with patch.object(run_robustness, "DEFAULT_OUT", self.default), \
+             patch.object(run_robustness, "run_study", return_value=FakeReport()), \
+             patch.object(run_robustness, "_refresh_dashboard_excess", return_value=0) as refresh:
+            rc = run_robustness.main(["--json", "--quiet", "--no-dashboard-refresh"])
+
+        self.assertEqual(rc, 0)
+        refresh.assert_not_called()

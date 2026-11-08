@@ -299,6 +299,11 @@ python run_robustness.py --json --out results/robustness.json
 python run_robustness.py --windows 2020-01-01,2022-01-01 # same question, two windows
 ```
 
+Saving to the default `results/robustness.json` automatically refreshes the
+frozen breadth read (`results/explore_notes.json`) and the dashboard excess
+snapshot (`results/dashboard_excess.json`). Use `--no-dashboard-refresh` to skip
+that follow-up; custom `--out` paths are left alone.
+
 It reports three things, in the order they matter:
 
 **Breadth.** Every setting is run on every market, and the headline is not the
@@ -556,10 +561,15 @@ These are intentionally different quantities. `results/robustness.json` is a
 field, so the excess builder does **not** assert a live cross-check for
 `paper.excess_return_pct` here.
 
-When you rerun the robustness sweep, do it through the supported chain:
+When you rerun the robustness sweep, do it through the supported chain. Saving
+the default `results/robustness.json` runs steps 2 and 3 automatically; the
+explicit commands remain the recovery path:
 1. `python run_robustness.py`
 2. `python quant/regenerate_frozen_reads.py`
 3. `python quant/build_dashboard_excess.py`
+
+Pass `--no-dashboard-refresh` to `run_robustness.py` to skip the automatic
+refresh and inspect a sweep before publishing it to the dashboard.
 
 Do **not** hand-edit `results/status.json`, `results/explore_notes.json`,
 or `results/dashboard_excess.json` to force a match with
@@ -594,7 +604,8 @@ Smoke note: `paper.excess_return_pct` and `breadth.median_excess_pct` are differ
 measurements by design. `paper.excess_return_pct` is the active paper artifact's
 single-window excess vs buy & hold for that one run; `breadth.median_excess_pct` is
 the median across the swept cells in the current robustness study. If they disagree,
-that is expected. If you want them to line up, rerun the chain in order:
+that is expected. If you want them to line up, rerun the chain in order (the
+sweep now performs steps 2 and 3 automatically for the default output):
 
 1. `python run_robustness.py`
 2. `python quant/regenerate_frozen_reads.py`
