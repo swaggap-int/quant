@@ -23,6 +23,7 @@ Two readings worth looking at:
 
 Examples:
     python run_walkforward.py                            # Bollinger reversion, BTC + ETH, 4h
+    python run_walkforward.py --family all                # Bollinger + EMA-ATR + Donchian
     python run_walkforward.py --family both              # legacy EMA + Donchian comparison
     python run_walkforward.py --folds 4 --timeframe 1d
     python run_walkforward.py --symbols BTC/USDT --family donchian
@@ -57,6 +58,8 @@ BOLLINGER_GRID = (
     {"period": 50, "entry_k": 2.5, "atr_stop_mult": 3.0},
 )
 FAMILY_LABEL = {"bollinger": "Bollinger reversion", "ema": "EMA-ATR", "donchian": "Donchian"}
+FAMILY_ORDER = ("bollinger", "ema", "donchian")
+FAMILY_CHOICES = (*FAMILY_ORDER, "both", "all")
 MIN_CHUNK_BARS = 300
 
 STUDY_GLOB = "walkforward_rolling_*.json"
@@ -131,7 +134,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--timeframe", default="4h")
     p.add_argument("--start", default="2021-01-01")
     p.add_argument("--folds", type=int, default=5, help="consecutive chunks (3-10); folds-1 are judged")
-    p.add_argument("--family", default="bollinger", choices=["bollinger", "ema", "donchian", "both"])
+    p.add_argument("--family", default="bollinger", choices=FAMILY_CHOICES)
     p.add_argument(
         "--out",
         default=None,
@@ -192,6 +195,15 @@ def candidate_rows(family: str) -> list[tuple[str, Callable[[], object]]]:
                 for p in small_param_grid()]
     return [(f"{entry}/{exit_}", (lambda entry=entry, exit_=exit_: DonchianBreakout(entry_n=entry, exit_m=exit_)))
             for entry, exit_ in DONCHIAN_GRID]
+
+
+def families_for(family: str) -> list[str]:
+    """Expand one family selector into the families run together in a report."""
+    if family == "all":
+        return list(FAMILY_ORDER)
+    if family == "both":
+        return ["ema", "donchian"]
+    return [family]
 
 
 def run_family(cfg: BacktestConfig, train_c, test_c, family: str) -> dict:
@@ -390,7 +402,7 @@ def main(argv=None) -> int:
     if not 3 <= args.folds <= 10:
         print("error: --folds must be 3-10", file=sys.stderr)
         return 2
-    fams = ["ema", "donchian"] if args.family == "both" else [args.family]
+    fams = families_for(args.family)
     symbols = [s.strip() for s in args.symbols.split(",") if s.strip()]
     if not symbols:
         print("error: --symbols is empty", file=sys.stderr)

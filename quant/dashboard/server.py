@@ -580,8 +580,8 @@ def build_walkforward_command(
         raise BadRequest("folds must be between 3 and 10")
 
     family = str(payload.get("family", "bollinger"))
-    if family not in ("bollinger", "ema", "donchian", "both"):
-        raise BadRequest("family must be bollinger, ema, donchian or both")
+    if family not in ("bollinger", "ema", "donchian", "both", "all"):
+        raise BadRequest("family must be bollinger, ema, donchian, both or all")
 
     raw_symbols = str(payload.get("symbols", "BTC/USDT,ETH/USDT"))
     symbols = [part.strip().upper() for part in raw_symbols.split(",") if part.strip()]

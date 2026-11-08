@@ -2553,6 +2553,7 @@ const WF_TIMEFRAMES = ["4h", "1d"];
 const WF_FOLDS = [3, 4, 5, 6];
 const WF_FAMILIES = [
   { value: "bollinger", label: "Bollinger reversion" },
+  { value: "all", label: "All three" },
   { value: "both", label: "EMA + Donchian" },
   { value: "ema", label: "EMA-ATR" },
   { value: "donchian", label: "Donchian" },
@@ -2578,7 +2579,8 @@ function wfStudyLabel(study) {
   const when = (study.generated_at || "").slice(0, 16).replace("T", " ");
   const markets = (study.markets || []).map((m) => String(m).split("/")[0]).join(" + ");
   const labels = study.family_labels || [];
-  const family = labels.length > 1 ? "Both" : labels[0] || "";
+  const family = labels.length === 3 ? "All three" :
+    labels.length === 2 ? labels.join(" + ") : labels[0] || "";
   return [
     when ? when + " UTC" : null,
     study.timeframe || null,
@@ -2604,7 +2606,8 @@ function renderWfControls(data) {
   fillSelect($("wfTimeframe"), WF_TIMEFRAMES, data.timeframe);
   fillSelect($("wfFolds"), WF_FOLDS, data.folds);
   const keys = data.families.map((f) => f.key);
-  fillSelect($("wfFamily"), WF_FAMILIES, keys.length === 1 ? keys[0] : "both");
+  const family = keys.length === 3 ? "all" : keys.length === 2 ? "both" : keys[0];
+  fillSelect($("wfFamily"), WF_FAMILIES, family);
 
   // The saved study's markets first, so adding or dropping one starts from what
   // is actually on screen; the two cache-backed pairs are always offered.

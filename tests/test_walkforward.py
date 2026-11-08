@@ -19,6 +19,7 @@ from run_walkforward import (
     KEEP_STUDIES,
     build_parser,
     candidate_rows,
+    families_for,
     main,
     fold_windows,
     prune_studies,
@@ -125,6 +126,14 @@ def test_bollinger_is_the_default_family_and_has_three_candidates() -> None:
     assert len(candidates) == 3
     assert [label for label, _ in candidates] == ["bb20 k2.0", "bb30 k2.0", "bb50 k2.5"]
     assert all(build().__class__.__name__ == "BollingerReversion" for _, build in candidates)
+
+
+def test_all_expands_to_the_three_families() -> None:
+    args = build_parser().parse_args(["--family", "all"])
+    assert args.family == "all"
+    assert families_for("all") == ["bollinger", "ema", "donchian"]
+    assert families_for("both") == ["ema", "donchian"]
+    assert families_for("donchian") == ["donchian"]
 
 
 def test_bollinger_family_runs_end_to_end_on_synthetic_bars() -> None:

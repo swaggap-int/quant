@@ -297,6 +297,27 @@ class TestWalkforwardIndex(unittest.TestCase):
         self.assertEqual(donchian["median_excess"], -4.72)
         self.assertEqual((donchian["pick"], donchian["pick_pct"]), ("30/15", 62.5))
 
+    def test_three_family_study_lists_all_three_labels(self) -> None:
+        payload = self._study()
+        payload["headline"]["bollinger"] = {
+            "windows": 8,
+            "beat_buy_hold": 4,
+            "risk_adjusted_beat": 2,
+            "risk_adjusted_windows": 7,
+            "median_test_excess": -20.73,
+            "verdict": "Mixed: 4 of 8 -- no reliable edge in this sample.",
+        }
+        write(self.dir, "walkforward_rolling_4h.json", payload)
+
+        snap = WalkforwardIndex(self.dir).snapshot()
+
+        labels = [family["label"] for family in snap["families"]]
+        self.assertEqual(labels, ["EMA-ATR", "Donchian", "Bollinger reversion"])
+        self.assertEqual(
+            snap["studies"][0]["family_labels"],
+            ["EMA-ATR", "Donchian", "Bollinger reversion"],
+        )
+
     def test_a_shared_verdict_is_one_plain_sentence(self) -> None:
         self._study()
 
@@ -466,6 +487,10 @@ class TestWalkforwardRun(unittest.TestCase):
         self.assertIn("--timeframe 4h", joined)
         self.assertIn("--folds 4", joined)
         self.assertIn("--family ema", joined)
+
+    def test_command_accepts_the_three_family_comparison(self) -> None:
+        joined = " ".join(build_walkforward_command({"family": "all"}))
+        self.assertIn("--family all", joined)
 
     def test_empty_request_uses_the_script_defaults(self) -> None:
         joined = " ".join(build_walkforward_command({}))

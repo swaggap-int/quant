@@ -327,8 +327,8 @@ than signal.
 
 ### What the EMA-ATR sweep says
 
-This sweep remains the EMA-ATR baseline; the walk-forward section below runs
-the Bollinger reversion family by default.
+This sweep remains the EMA-ATR baseline; the walk-forward section below
+defaults to Bollinger reversion and can run all three families side by side.
 
 BTC and ETH, daily and 4-hourly, from 2021: 60 combinations, 200 random
 schedules per market, `--seed 7`.
@@ -369,6 +369,7 @@ exactly once.
 
 ```bash
 python run_walkforward.py                              # Bollinger reversion, BTC + ETH, 4h
+python run_walkforward.py --family all                # all three families, same folds
 python run_walkforward.py --family both                # legacy EMA-ATR + Donchian comparison
 python run_walkforward.py --folds 4 --timeframe 1d
 python run_walkforward.py --symbols BTC/USDT --family donchian
@@ -390,18 +391,26 @@ refreshed through 2026-11-08:
 | family | beat buy & hold | better return/drawdown | median excess |
 | --- | --- | --- | --- |
 | Bollinger reversion | 4 of 8 | 2 of 7 | −20.7 pts |
+| EMA-ATR | 4 of 8 | 6 of 8 | −5.4 pts |
+| Donchian | 4 of 8 | 5 of 8 | −10.6 pts |
 
-Bollinger reversion beat buy & hold in only 4 of 8 unseen windows and earned
-more per unit of drawdown in 2 of 7. The split is not uniform: BTC was weaker
-(2/4 windows, −32.9 points median excess, 0/3 risk-adjusted), while ETH was
-mixed (2/4, −8.6 points, 2/4). The most-picked setting was `bb20 k2.0` in
-50% of folds and median selection regret was −2.8 points on BTC and −4.6 on
-ETH. This is a different signal, not a better one in this sample. EMA-ATR and
-Donchian remain available for comparison with `--family both`; the default
-study now runs Bollinger reversion. Every run writes its own dated file (for
-example `results/walkforward_rolling_4h_20261108T044311Z.json`) keeping every
-fold, every candidate setting and the regret for each pick, so the reading can
-be re-checked rather than trusted, and older studies stay comparable.
+All three families split buy & hold at 4 of 8 unseen windows. EMA-ATR was the
+strongest of the three on the risk-adjusted reading (6 of 8) and median excess
+(−5.4 points), but it still did not beat holding on the median. Donchian was
+mixed: 5 of 8 risk-adjusted and −10.6 points median excess, with large negative
+selection regret (−9.8 points on BTC, −9.5 on ETH). Bollinger was the weakest
+of the three: 2 of 7 risk-adjusted and −20.7 points median excess. By market,
+BTC median excess was −32.9 / −11.3 / −28.1 points and ETH was −8.6 / +0.6 /
++6.9 (Bollinger / EMA-ATR / Donchian). Bollinger's risk count is over 7 windows
+because one comparison was too small to be meaningful.
+
+This is a different signal, not a better one in this sample. The default study
+still runs Bollinger reversion; `--family all` writes one dated file with all
+three families on the same folds, while `--family both` keeps the legacy
+EMA-ATR + Donchian pair. Every run writes its own dated file (for example
+`results/walkforward_rolling_4h_20261108T045448Z.json`) keeping every fold,
+every candidate setting and the regret for each pick, so the reading can be
+re-checked rather than trusted, and older studies stay comparable.
 
 The archive keeps the ten newest dated studies. Each run prunes what is older than
 that, ordering by the timestamp in the filename rather than the file's mtime, so
