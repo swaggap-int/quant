@@ -197,6 +197,174 @@
   .runitem[aria-current="true"] .meta { color: inherit; opacity: .8; }
   .runitem[aria-current="true"] .ret { color: inherit; }
 
+  /* -- paper bot (scheduler health, mirrors paper_trade.py --health) ------ */
+
+  .papercard {
+    padding: 10px 11px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    background: var(--card);
+  }
+  /* The summary is the whole card when collapsed: health and the headline
+     numbers on the first row, then where the data ends and the last run's
+     verdict on a second. Phones start collapsed so the chart stays close to
+     the top; wide screens start open and hide both compact rows. */
+  .paperhead {
+    margin: 0; cursor: pointer; list-style: none;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "state peek chev" "meta meta meta";
+    align-items: center; column-gap: 7px; row-gap: 3px;
+  }
+  .paperhead::-webkit-details-marker { display: none; }
+  .paperhead::marker { content: ""; }
+  .paperstate {
+    grid-area: state;
+    display: flex; align-items: center; gap: 7px; flex: none;
+    font-size: 12.5px; font-weight: 600; letter-spacing: -.01em;
+  }
+  .paperstate::before {
+    content: ""; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--muted-dim); flex: none;
+  }
+  .paperstate.ok::before { background: var(--gain); }
+  .paperstate.bad::before { background: var(--loss); }
+  .paperpeek {
+    grid-area: peek; display: none; min-width: 0; text-align: right;
+    font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .papercard:not([open]) .paperpeek { display: block; }
+  .paperchev {
+    grid-area: chev; justify-self: end;
+    width: 6px; height: 6px;
+    border-right: 1.5px solid var(--muted-dim);
+    border-bottom: 1.5px solid var(--muted-dim);
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform var(--step) var(--ease);
+  }
+  .papercard[open] .paperchev { transform: rotate(-135deg) translateY(-1px); }
+  /* Date and verdict: the two things the numbers cannot say. Hidden while the
+     card is open, where the metrics table and the runs already carry them. */
+  .papermeta {
+    grid-area: meta; display: none; flex-wrap: wrap; align-items: baseline;
+    gap: 1px 8px; min-width: 0;
+    font-size: 11px; line-height: 1.35;
+  }
+  .papercard:not([open]) .papermeta { display: flex; }
+  .papermeta .when {
+    flex: none; color: var(--muted-dim); white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .papermeta .verdict { min-width: 0; color: var(--muted); }
+  .paperreason { margin: 6px 0 0; font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+  .paperhint { margin: 4px 0 0; font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+  .paperhint code { font-size: 11px; color: var(--text); background: transparent; border: 0; padding: 0; }
+  .papermets { margin: 6px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 1px 10px; }
+  .papermets dt { font-size: 11px; color: var(--muted-dim); }
+  /* The jump from the header has to end somewhere obvious: the card sits among
+     other rail panels, so it wears a short ring on arrival. Only the shadow
+     moves, so nothing in the rail shifts by a pixel. */
+  .papercard.flash { animation: paperflash 1.25s var(--ease) 1; }
+  @keyframes paperflash {
+    0%, 40% { box-shadow: 0 0 0 2px var(--accent); }
+    100% { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .papercard.flash { animation: none; box-shadow: 0 0 0 2px var(--accent); }
+  }
+
+  /* The card's way back to the header pill it was opened from. It only earns
+     its space when the page is scrolled, so it is hidden until then. */
+  .paperback {
+    display: inline-flex; align-items: center; gap: 5px; margin: 12px 0 0;
+    padding: 3px 2px; background: transparent; border: none; border-radius: 3px;
+    color: var(--muted); font-size: 11.5px; font-weight: 500;
+  }
+  .paperback:hover { background: transparent; border-color: transparent; color: var(--text); }
+  .paperback svg { width: 13px; height: 13px; display: block; }
+  .paperback[hidden] { display: none; }
+  .papermets dd { margin: 0; text-align: right; font-size: 11.5px; font-weight: 600; }
+  .papermets dd.pos { color: var(--gain); }
+  .papermets dd.neg { color: var(--loss); }
+  .papersub {
+    margin: 8px 0 1px; font-size: 10.5px; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--muted-dim);
+  }
+  .paperruns { display: grid; gap: 1px; }
+  .paperrow { display: flex; align-items: baseline; gap: 6px; font-size: 11.5px; color: var(--muted); }
+  .paperrow .mid { font-size: 11px; color: var(--muted-dim); }
+  .paperrow .ret { margin-left: auto; font-weight: 600; }
+  .paperrow .ret.pos { color: var(--gain); }
+  .paperrow .ret.neg { color: var(--loss); }
+  .papernone { margin: 0; font-size: 11.5px; color: var(--muted-dim); }
+
+  /* -- walk-forward study ------------------------------------------------ */
+
+  /* The counts are the point: two rates per family, read at a glance, with the
+     sentence underneath doing the interpretation the numbers cannot. */
+  .wflede {
+    margin: -4px 0 14px; max-width: 66ch;
+    font-size: 12.5px; line-height: 1.45; color: var(--muted);
+  }
+  .wfrows { display: grid; gap: 8px; }
+  .wfrow {
+    display: grid; grid-template-columns: minmax(90px, 1fr) auto auto;
+    align-items: baseline; gap: 4px 22px;
+    padding: 10px 13px;
+    border: 1px solid var(--line); border-radius: var(--r-pill);
+    background: var(--card-2);
+  }
+  .wfname { font-size: 12.5px; font-weight: 600; letter-spacing: -.01em; }
+  .wfstat { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+  .wfstat b {
+    font-size: 17px; font-weight: 650; letter-spacing: -.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .wfstat .of { color: var(--muted-dim); font-weight: 500; }
+  .wfstat span { font-size: 11px; color: var(--muted); }
+  /* The context line: what the rates were measured against, and whether the
+     pick was stable or wandering. Quiet enough to read after the numbers. */
+  .wfdetail {
+    grid-column: 1 / -1;
+    margin: 3px 0 0;
+    font-size: 11px; line-height: 1.4; color: var(--muted-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .wfverdict { margin: 12px 0 0; font-size: 12.5px; line-height: 1.5; }
+  .wfreads { margin: 12px 0 0; display: grid; gap: 4px; }
+  .wfreads p { margin: 0; font-size: 12.5px; line-height: 1.5; }
+  .wfrun { margin-left: auto; font-size: 11.5px; padding: 6px 10px; }
+  .wferror { margin: 10px 0 0; font-size: 11.5px; line-height: 1.4; color: var(--loss); }
+  .wfstudybar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    margin: -2px 0 12px;
+  }
+  .wfstudybar select {
+    min-width: 0; width: 100%; max-width: 420px; flex: 1 1 240px;
+    padding: 5px 9px; font-size: 12px;
+  }
+  .wfcontrols {
+    display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 18px;
+    margin: 0 0 14px; padding: 10px 12px;
+    border: 1px solid var(--line); border-radius: var(--r-ctl);
+    background: var(--card-2);
+  }
+  .wffield, .wfmarkets { display: grid; gap: 4px; }
+  .wffield > span, .wflabel {
+    font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--muted-dim);
+  }
+  .wffield select { min-width: 88px; padding: 5px 8px; font-size: 12.5px; }
+  .wfchecks { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; min-height: 32px; }
+  .wfchecks .check { font-size: 12.5px; gap: 6px; padding: 4px 2px; }
+  .wfchecks .check input { width: 14px; height: 14px; }
+
+  @media (max-width: 560px) {
+    .wfrow { grid-template-columns: 1fr; gap: 6px; padding: 9px 12px; }
+    .wfstat b { font-size: 16px; }
+  }
+
   .viewbits { display: flex; flex-direction: column; gap: 3px; }
 
   .railfoot { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
@@ -215,6 +383,28 @@
   .chartctl { display: none; }
   .runpick select { flex: 1 1 auto; min-width: 0; }
   .topactions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+  /* The paper bot's state at the top of the page: one glance, no scrolling.
+     The dot is decoration; the words carry the meaning. */
+  .pulse {
+    display: inline-flex; align-items: center; gap: 7px; margin: 0;
+    padding: 4px 11px 4px 9px; font-size: 12px; font-weight: 400;
+    color: var(--muted); background: transparent; text-align: left;
+    border: 1px solid var(--line); border-radius: 999px; white-space: nowrap;
+    cursor: pointer; flex: 0 0 auto;
+  }
+  .pulse:hover { background: transparent; border-color: var(--muted-dim); color: var(--text); }
+  .pulse:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 999px; }
+  .pulse[hidden] { display: none; }
+  .pulse-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted-dim); flex: 0 0 auto;
+  }
+  .pulse.ok .pulse-dot { background: var(--gain); }
+  .pulse.warn .pulse-dot { background: var(--accent); }
+  .pulse.warn { color: var(--text, inherit); border-color: var(--accent); }
+  .pulse.bad .pulse-dot { background: var(--loss); }
+  .pulse.bad { color: var(--text, inherit); border-color: var(--loss); }
 
   .card {
     background: var(--card);
@@ -703,7 +893,20 @@
 
   @media (max-width: 900px) {
     .shell { grid-template-columns: minmax(0, 1fr); }
-    .rail { display: none; }
+    /* On phones the sidebar has no room, but the paper bot's health is the one
+       thing you want at a glance — keep just that group as a status strip at
+       the top of the page. */
+    .rail {
+      display: flex; position: static; height: auto; overflow: visible;
+      gap: 0; padding: 12px 14px 0;
+      border-right: none; background: transparent;
+    }
+    .rail > .brand,
+    .rail > .railgroup:not(.papergroup),
+    .rail > .railfoot { display: none; }
+    .rail > .papergroup { width: 100%; }
+    .rail .railh { padding: 0; margin-bottom: 6px; }
+    .papercard { padding: 9px 11px; }
     .runpick { display: flex; flex: 1 1 100%; }
     .topbar { flex-wrap: wrap; gap: 10px; }
     .topactions { margin-left: auto; }
@@ -794,6 +997,33 @@
       <span class="brand-name">Recorder<span>backtest reader</span></span>
     </div>
 
+    <section class="railgroup papergroup" aria-label="Paper bot">
+      <p class="railh">Paper bot</p>
+      <details class="papercard" id="paperCard" open>
+        <summary class="paperhead">
+          <span class="paperstate" id="paperState">checking…</span>
+          <span class="paperpeek" id="paperPeek"></span>
+          <span class="paperchev" aria-hidden="true"></span>
+          <span class="papermeta" id="paperMeta">
+            <span class="when" id="paperWhen"></span>
+            <span class="verdict" id="paperVerdict"></span>
+          </span>
+        </summary>
+        <p class="paperreason" id="paperReason"></p>
+        <p class="paperhint" id="paperHint" hidden></p>
+        <dl class="papermets" id="paperMets"></dl>
+        <p class="papersub">Recent runs</p>
+        <div class="paperruns" id="paperRuns"></div>
+        <button type="button" class="paperback" id="paperBack" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 19V5M5 12l7-7 7 7"></path>
+          </svg>
+          Back to top
+        </button>
+      </details>
+    </section>
+
     <nav class="railgroup" aria-label="Saved runs">
       <p class="railh">Runs <span class="chip" id="runCount">0</span></p>
       <div class="runlist" id="runList"></div>
@@ -810,6 +1040,7 @@
 
     <div class="railfoot">
       <button type="button" class="ghost" id="openGuideAlt">How to read this</button>
+      <button type="button" class="ghost" id="openExcessAlt">Excess &amp; breadth</button>
       <button type="button" class="ghost" id="openRobustness">Robustness sweep</button>
       <span class="ver">v0.1.0 · loopback only</span>
     </div>
@@ -818,6 +1049,12 @@
   <div class="content">
 
     <div class="topbar">
+      <button type="button" class="pulse" id="paperPulse" hidden
+              aria-live="polite" aria-atomic="true"
+              aria-controls="paperCard" aria-expanded="true">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        <span id="paperPulseText">paper…</span>
+      </button>
       <label class="runpick">Run
         <select id="runPicker" aria-label="Select a saved run"></select>
       </label>
@@ -836,6 +1073,7 @@
           </svg>
         </button>
         <button id="toggleForm" class="primary" aria-expanded="false">New run</button>
+        <button type="button" class="ghost" id="openExcess">Excess &amp; breadth</button>
       </div>
     </div>
 
@@ -934,6 +1172,45 @@
           <span class="grp"><kbd>?</kbd>guide</span>
           <span class="grp"><kbd>B</kbd>robustness sweep</span>
         </p>
+      </section>
+
+      <section class="card walkforward" id="walkforward" hidden data-reveal>
+        <div class="cardhead">
+          <h2>Walk-forward check</h2>
+          <span class="sub" id="wfMeta"></span>
+          <button type="button" class="ghost wfrun" id="wfRun"
+                  title="Rerun the study with the timeframe, chunk count and markets chosen below">Run again</button>
+        </div>
+        <div class="wfstudybar">
+          <label class="wflabel" for="wfStudy">Saved study</label>
+          <select id="wfStudy"></select>
+        </div>
+        <p class="wflede">
+          Settings are picked on one chunk of history, then judged on the next chunk the
+          picker never saw. A rate near half is what luck looks like.
+        </p>
+        <div class="wfcontrols" id="wfControls">
+          <label class="wffield">
+            <span>Timeframe</span>
+            <select id="wfTimeframe"></select>
+          </label>
+          <label class="wffield">
+            <span>Chunks</span>
+            <select id="wfFolds"></select>
+          </label>
+          <label class="wffield">
+            <span>Families</span>
+            <select id="wfFamily"></select>
+          </label>
+          <div class="wfmarkets" role="group" aria-label="Markets">
+            <span class="wflabel">Markets</span>
+            <div class="wfchecks" id="wfMarkets"></div>
+          </div>
+        </div>
+        <div class="wfrows" id="wfRows"></div>
+        <p class="wfverdict" id="wfVerdict" hidden></p>
+        <div class="wfreads" id="wfReads" hidden></div>
+        <p class="wferror" id="wfError" role="alert" hidden></p>
       </section>
 
       <section class="spec" id="spec"></section>
@@ -1082,9 +1359,89 @@
 </dialog>
 
 <div class="cur cur-ring" id="curRing" aria-hidden="true"></div>
-<div class="cur cur-dot" id="curDot" aria-hidden="true"></div>
-<p class="sr-only" id="srStatus" role="status" aria-live="polite" aria-atomic="true" aria-busy="true"></p>
+<div class="cur cur-dot" id="curDot" aria-hidden="true"></div>    <p class="sr-only" id="srStatus" role="status" aria-live="polite" aria-atomic="true" aria-busy="true"></p>
 
+    <!-- excess panel markup -->
+    <dialog class="excess" id="excessPanel" aria-labelledby="excessHeading">
+      <div class="excess-inner">
+        <div class="excess-head">
+          <h2 id="excessHeading">Excess &amp; breadth</h2>
+          <button type="button" class="ghost x" id="excessClose">Close</button>
+        </div>
+        <div class="excess-based">
+          <span id="excessBasedOn"></span>
+        </div>
+        <div class="excess-body">
+          <section class="excess-paper">
+            <h3>Latest backtest</h3>
+            <div class="excess-headline">
+              <div class="excess-big">
+                <span id="excessExcess"></span>
+                <span class="excess-under">vs buy &amp; hold <span id="excessBench"></span></span>
+              </div>
+              <div class="excess-meta">
+                <span id="excessTitle"></span>
+                <span class="excess-sub" id="excessSub"></span>
+              </div>
+            </div>
+            <p class="excess-verdict" id="excessRead" role="status" aria-live="polite"></p>
+            <dl class="glance">
+              <dt>Total return</dt><dd id="excessTotalReturn"></dd>
+              <dt>Sharpe</dt><dd id="excessSharpe"></dd>
+              <dt>Max drawdown</dt><dd id="excessMaxDD"></dd>
+              <dt>Bars in market</dt><dd id="excessBarsInMarket"></dd>
+              <dt>Fees paid</dt><dd id="excessFees"></dd>
+            </dl>
+          </section>
+
+          <section class="excess-breadth">
+            <h3>Swept excess across markets</h3>
+            <p class="excess-breadth-sub">Robustness sweep reading, read from the frozen source.</p>
+            <dl class="breadth-headline">
+              <dt>Planned / ran</dt><dd id="breadthPlanned"></dd>
+              <dt>Beat buy &amp; hold</dt><dd id="breadthBeat"></dd>
+              <dt>No red flags</dt><dd id="breadthClean"></dd>
+              <dt>Median excess</dt><dd id="breadthMedianExcess"></dd>
+              <dt>Median return</dt><dd id="breadthMedianReturn"></dd>
+              <dt>Median Sharpe</dt><dd id="breadthMedianSharpe"></dd>
+              <dt>Median max DD</dt><dd id="breadthMedianDD"></dd>
+              <dt>Total trades</dt><dd id="breadthTotalTrades"></dd>
+              <dt>Best cell</dt><dd id="breadthBestCell"></dd>
+              <dt>Best excess</dt><dd id="breadthBestExcess"></dd>
+            </dl>
+
+            <section class="breadth-by-market">
+              <h4>By market</h4>
+              <ul id="breadthByMarket" class="by-market"></ul>
+            </section>
+
+            <section class="breadth-nulls">
+              <h4>Luck test</h4>
+              <p class="excess-breadth-sub">Reference cell versus random-timing control.</p>
+              <ul id="breadthNulls" class="nulls"></ul>
+            </section>
+
+            <section class="excess-interpretation">
+              <h4>Reading</h4>
+              <p id="excessInterpretation"></p>
+            </section>
+
+            <section class="excess-next">
+              <h4>Still open</h4>
+              <p id="excessNextQuestion"></p>
+            </section>
+
+            <section class="excess-notes">
+              <h4>Notes on this sweep</h4>
+              <ul id="excessNotes"></ul>
+            </section>
+          </section>
+        </div>
+        <div class="excess-foot">
+          <button type="button" class="primary" id="excessDone">Got it</button>
+          <span class="hint">This panel reads <code>results/dashboard_excess.json</code> from disk.</span>
+        </div>
+      </div>
 <script>
 "use strict";
 
@@ -1096,6 +1453,7 @@ const state = {
   data: null,
   scale: "both",
   table: "trades",
+  walkforward: null,
   hover: null,
   reveal: 1,      // 0..1 trace draw-in progress
   traceRaf: null,
@@ -1131,7 +1489,7 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e)
 
 themeToggle.setAttribute("aria-pressed", String(currentTheme() === "light"));
 
-/* ------------------------------------------------------------------ format */
+/* ------------------------------------------------------------------ format *//* ------------------------------------------------------------------ format */
 
 const fmt = {
   money(v, dp = 2) {
@@ -1140,7 +1498,11 @@ const fmt = {
   },
   signedPct(v, dp = 2) {
     if (!isFinite(v)) return "–";
-    return (v >= 0 ? "+" : "") + v.toFixed(dp) + "%";
+    return (v > 0 ? "+" : "-") + Math.abs(v).toFixed(dp) + "%";
+  },
+  pct(v, dp = 2) {
+    if (!isFinite(v)) return "–";
+    return v.toFixed(dp) + "%";
   },
   ratio(v) {
     if (v === Infinity || v === "Infinity") return "∞";
@@ -1958,6 +2320,501 @@ function renderRunList() {
   }
 }
 
+/* -- paper bot (scheduler health, mirrors paper_trade.py --health) ------ */
+
+function agoWords(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 90) return "just now";
+  if (seconds < 5400) return `${Math.round(seconds / 60)}m ago`;
+  if (seconds < 172800) return `${Math.round(seconds / 3600)}h ago`;
+  return `${Math.round(seconds / 86400)}d ago`;
+}
+
+const HEARTBEAT_SETUP = "tasks/setup_alert_channel.sh --heartbeat URL";
+
+// "heartbeat off" is only a fact; the card adds the way out of it. Shown only
+// when the log says the ping was skipped, so a delivery failure keeps its own
+// louder explanation instead of being handed a setup instruction.
+function renderPaperHint(hb) {
+  const hint = $("paperHint");
+  hint.textContent = "";
+  hint.hidden = !hb?.skipped;
+  if (!hb?.skipped) return;
+  hint.append("No heartbeat URL is set, so a missed run cannot reach you off this Mac. Set one with ");
+  const code = document.createElement("code");
+  code.textContent = HEARTBEAT_SETUP;
+  hint.append(code, ".");
+}
+
+function renderPulse(health) {
+  const el = $("paperPulse");
+  const text = $("paperPulseText");
+  const hb = health?.heartbeat || null;
+  const last = health?.last_run;
+  const healthy = Boolean(health?.healthy);
+  // A failed ping means the off-machine alert never left this Mac, even when
+  // the paper run itself is fine, so it reddens the pill on its own instead of
+  // hiding behind a green "paper ok".
+  const beatFailed = Boolean(hb?.failed);
+  const beatSkipped = Boolean(hb?.skipped);
+  // The tone names the worst thing known about the day: a failed ping outranks
+  // a quiet one, and a broken paper run outranks both.
+  let tone = "";
+  if (beatFailed || (!healthy && last)) tone = "bad";
+  else if (beatSkipped) tone = "warn";
+  else if (healthy) tone = "ok";
+  el.className = "pulse" + (tone ? " " + tone : "");
+
+  let lead = "no paper run yet";
+  if (healthy) lead = beatFailed ? "alerting broken" : "paper ok";
+  else if (last) lead = "paper needs a look";
+  const parts = [lead];
+  if (last && Number.isFinite(last.run_timestamp_ms)) {
+    parts.push(`ran ${agoWords((Date.now() - last.run_timestamp_ms) / 1000)}`);
+  }
+  if (hb) {
+    // A failed ping is the one heartbeat state that belongs in the text: it
+    // means the off-machine alert never left this Mac, and an age alone cannot
+    // say that. For a healthy ping, a clock time is the useful reading while it
+    // is recent; an old one is easier to judge as an age.
+    if (hb.skipped) parts.push("heartbeat off");
+    else if (hb.failed) parts.push(`ping failed ${agoWords(hb.age_seconds)}`);
+    else parts.push(`beat ${hb.age_seconds < 21600 ? hb.at_iso.slice(11, 16) : agoWords(hb.age_seconds)}`);
+  }
+  text.textContent = parts.join(" · ");
+  // A skipped ping is a configuration gap with a known fix, so the tooltip
+  // names the command instead of echoing the log's "skip:" line.
+  const beatNote = hb?.skipped ? `heartbeat off; set a URL with ${HEARTBEAT_SETUP}` : hb?.detail;
+  el.title = [health?.reason, beatNote].filter(Boolean).join(" — ");
+  el.hidden = false;
+}
+
+/* -- the pill is the doorway to the card ------------------------------- */
+
+// The paper verdict is always on the page, but where it lives depends on the
+// window: the sidebar on a desktop, a strip above the top bar on a phone. It is
+// the same <details> in both cases, so opening it is the only thing that varies.
+function syncPulseExpanded() {
+  const pill = $("paperPulse");
+  const card = $("paperCard");
+  if (pill && card) pill.setAttribute("aria-expanded", String(Boolean(card.open)));
+}
+
+function revealPaperCard() {
+  const card = $("paperCard");
+  if (!card) return;
+  card.open = true;
+  card.scrollIntoView({ block: "center", behavior: reduceMotion.matches ? "auto" : "smooth" });
+  // Focus follows the jump, so the next Tab lands inside the card instead of
+  // restarting from the top of the page. preventScroll stops the focus itself
+  // from fighting the smooth scroll above.
+  const summary = card.querySelector("summary");
+  if (summary) summary.focus({ preventScroll: true });
+  flashPaperCard();
+  syncPulseExpanded();
+  syncBackToTop();
+}
+
+// A return control is dead weight when the page is already at the top, so it
+// appears only while there is somewhere to go back to.
+function syncBackToTop() {
+  const back = $("paperBack");
+  const card = $("paperCard");
+  if (back && card) back.hidden = !(card.open && window.scrollY > 8);
+}
+
+function returnToTop() {
+  const pill = $("paperPulse");
+  window.scrollTo({ top: 0, behavior: reduceMotion.matches ? "auto" : "smooth" });
+  // The reader came here from the pill, so the loop closes back on it rather
+  // than dropping them at the top of the document to hunt for their place.
+  if (pill && !pill.hidden) pill.focus({ preventScroll: true });
+  syncBackToTop();
+}
+
+// A repeat click restarts the highlight rather than stacking timers, and the
+// reflow between removing and adding the class restarts the animation itself.
+let flashTimer = 0;
+function flashPaperCard() {
+  const card = $("paperCard");
+  if (!card) return;
+  clearTimeout(flashTimer);
+  card.classList.remove("flash");
+  void card.offsetWidth;
+  card.classList.add("flash");
+  flashTimer = setTimeout(() => card.classList.remove("flash"), 1300);
+}
+
+function renderPaper(data) {
+  const health = data?.health || {};
+  const last = health.last_run;
+  const stateEl = $("paperState");
+  // Three honest states: alive, needs a look, or nothing has run yet. The dot
+  // is decoration; the words carry the meaning.
+  stateEl.textContent = health.healthy ? "healthy" : last ? "needs a look" : "no runs yet";
+  stateEl.className = "paperstate" + (health.healthy ? " ok" : last ? " bad" : "");
+  $("paperReason").textContent = health.reason || "";
+  renderPaperHint(health.heartbeat);
+  renderPulse(health);
+
+  // The collapsed summary has to carry the story on its own: equity, return
+  // and trade count, with any missing figure simply left out.
+  const peek = $("paperPeek");
+  if (last) {
+    peek.textContent = [
+      Number.isFinite(last.equity_final) ? fmt.money(last.equity_final) : null,
+      Number.isFinite(last.total_return_pct) ? fmt.signedPct(last.total_return_pct) : null,
+      `${last.trade_count ?? 0} trades`,
+    ].filter(Boolean).join(" · ");
+  } else {
+    peek.textContent = "";
+  }
+
+  // Second row: when the data ends and what the last run concluded. Both are
+  // optional — an older run may carry no verdict, and it must not leave a
+  // dangling separator.
+  const dataEnd = (last?.data_end_iso || "").slice(0, 10);
+  const when = $("paperWhen");
+  const verdict = $("paperVerdict");
+  when.textContent = dataEnd ? `data through ${dataEnd}` : "";
+  verdict.textContent = last?.verdict || "";
+  $("paperMeta").title = [when.textContent, verdict.textContent].filter(Boolean).join(" · ");
+
+  const mets = $("paperMets");
+  mets.textContent = "";
+  if (last) {
+    const rows = [
+      ["Data through", (last.data_end_iso || "").slice(0, 10) || "–"],
+      ["Equity", fmt.money(last.equity_final)],
+      ["Return", fmt.signedPct(last.total_return_pct)],
+      ["Trades", String(last.trade_count ?? 0)],
+    ];
+    for (const [k, v] of rows) {
+      const dt = document.createElement("dt");
+      dt.textContent = k;
+      const dd = document.createElement("dd");
+      dd.textContent = v;
+      if (k === "Return") dd.className = fmt.sign(last.total_return_pct);
+      mets.append(dt, dd);
+    }
+  }
+
+  const host = $("paperRuns");
+  host.textContent = "";
+  const runs = (data?.runs || []).slice(0, 4);
+  if (!runs.length) {
+    const p = document.createElement("p");
+    p.className = "papernone";
+    p.textContent = "No paper runs saved yet.";
+    host.append(p);
+    return;
+  }
+  for (const r of runs) {
+    const row = document.createElement("div");
+    row.className = "paperrow";
+    const when = document.createElement("span");
+    when.textContent = (r.data_end || r.created_at || "").slice(0, 10).replace(/^\d{4}-/, "");
+    const mid = document.createElement("span");
+    mid.className = "mid";
+    mid.textContent = `${r.trades} trades`;
+    const ret = document.createElement("span");
+    ret.className = "ret " + fmt.sign(r.return_pct);
+    ret.textContent = isFinite(r.return_pct) ? fmt.signedPct(r.return_pct, 1) : "–";
+    row.title = `${r.run_id}${r.verdict ? " — " + r.verdict : ""}`;
+    row.append(when, mid, ret);
+    host.append(row);
+  }
+}
+
+/* -- walk-forward (the study, not the loaded run) ----------------------- */
+
+function wfStat(num, den, label) {
+  const el = document.createElement("span");
+  el.className = "wfstat";
+  const big = document.createElement("b");
+  if (Number.isFinite(num) && Number.isFinite(den)) {
+    big.textContent = String(num);
+    const of = document.createElement("span");
+    of.className = "of";
+    of.textContent = "/" + den;
+    big.append(of);
+  } else {
+    big.textContent = "";
+  }
+  const cap = document.createElement("span");
+  cap.textContent = label;
+  el.append(big, cap);
+  return el;
+}
+
+const WF_TIMEFRAMES = ["4h", "1d"];
+const WF_FOLDS = [3, 4, 5, 6];
+const WF_FAMILIES = [
+  { value: "both", label: "Both" },
+  { value: "ema", label: "EMA-ATR" },
+  { value: "donchian", label: "Donchian" },
+];
+const WF_DEFAULT_MARKETS = ["BTC/USDT", "ETH/USDT"];
+
+function fillSelect(sel, values, current) {
+  const wanted = values.map((v) => (typeof v === "string" ? { value: v, label: v } : v));
+  if (current != null && !wanted.some((o) => o.value === String(current))) {
+    wanted.push({ value: String(current), label: String(current) });
+  }
+  sel.textContent = "";
+  for (const { value, label } of wanted) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    sel.append(option);
+  }
+  sel.value = current != null ? String(current) : wanted[0].value;
+}
+
+function wfStudyLabel(study) {
+  const when = (study.generated_at || "").slice(0, 16).replace("T", " ");
+  const markets = (study.markets || []).map((m) => String(m).split("/")[0]).join(" + ");
+  const labels = study.family_labels || [];
+  const family = labels.length > 1 ? "Both" : labels[0] || "";
+  return [
+    when ? when + " UTC" : null,
+    study.timeframe || null,
+    Number.isFinite(study.folds) ? study.folds + " chunks" : null,
+    markets || null,
+    family || null,
+  ].filter(Boolean).join(" \u00b7 ");
+}
+
+function renderWfStudies(studies, current) {
+  const sel = $("wfStudy");
+  sel.textContent = "";
+  for (const study of studies) {
+    const option = document.createElement("option");
+    option.value = study.file;
+    option.textContent = wfStudyLabel(study);
+    sel.append(option);
+  }
+  if (current) sel.value = current;
+}
+
+function renderWfControls(data) {
+  fillSelect($("wfTimeframe"), WF_TIMEFRAMES, data.timeframe);
+  fillSelect($("wfFolds"), WF_FOLDS, data.folds);
+  const keys = data.families.map((f) => f.key);
+  fillSelect($("wfFamily"), WF_FAMILIES, keys.length === 1 ? keys[0] : "both");
+
+  // The saved study's markets first, so adding or dropping one starts from what
+  // is actually on screen; the two cache-backed pairs are always offered.
+  const current = new Set(data.markets || []);
+  const options = [...WF_DEFAULT_MARKETS];
+  for (const symbol of current) if (!options.includes(symbol)) options.push(symbol);
+
+  const host = $("wfMarkets");
+  host.textContent = "";
+  for (const symbol of options) {
+    const label = document.createElement("label");
+    label.className = "check";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.value = symbol;
+    input.checked = current.has(symbol);
+    const text = document.createElement("span");
+    text.textContent = symbol.split("/")[0];
+    label.append(input, text);
+    host.append(label);
+  }
+}
+
+function wfDetail(f) {
+  const bits = [];
+  if (Number.isFinite(f.median_excess)) {
+    const v = f.median_excess;
+    bits.push(`median excess vs holding ${v > 0 ? "+" : ""}${v.toFixed(1)} pts`);
+  }
+  if (f.pick) {
+    const share = Number.isFinite(f.pick_pct) ? ` in ${f.pick_pct}% of folds` : "";
+    bits.push(`picked ${f.pick}${share}`);
+  }
+  if (!bits.length) return null;
+  const el = document.createElement("p");
+  el.className = "wfdetail";
+  el.textContent = bits.join(" \u00b7 ");
+  el.title =
+    "Median excess is the chosen setting's return minus buy & hold across unseen " +
+    "chunks. The pick is the setting chosen most often on the chunk before each.";
+  return el;
+}
+
+function renderWalkforward(data) {
+  const card = $("walkforward");
+  const families = data?.families || [];
+  state.walkforward = data?.available && families.length ? data : null;
+  if (!state.walkforward) {
+    card.hidden = true;
+    return;
+  }
+
+  const markets = (data.markets || []).map((s) => String(s).split("/")[0]).join(" + ");
+  const through = (data.last_test || "").slice(0, 10);
+  $("wfMeta").textContent = [
+    data.timeframe || null,
+    Number.isFinite(data.folds) ? `${data.folds} chunks` : null,
+    markets || null,
+    through ? `through ${through}` : null,
+  ].filter(Boolean).join(" \u00b7 ");
+
+  renderWfStudies(data.studies || [], data.file);
+  renderWfControls(state.walkforward);
+
+  const host = $("wfRows");
+  host.textContent = "";
+  for (const f of families) {
+    const row = document.createElement("div");
+    row.className = "wfrow";
+    const name = document.createElement("span");
+    name.className = "wfname";
+    name.textContent = f.label;
+    row.append(
+      name,
+      wfStat(f.beat, f.windows, "beat buy & hold"),
+      wfStat(f.risk_beat, f.risk_windows, "more per unit of drawdown"),
+    );
+    const detail = wfDetail(f);
+    if (detail) row.append(detail);
+    host.append(row);
+  }
+
+  // One shared sentence when every family agrees; otherwise each family keeps
+  // its own read, because averaging two different findings would invent a third.
+  const single = $("wfVerdict");
+  const multi = $("wfReads");
+  multi.textContent = "";
+  if (data.verdict) {
+    single.hidden = false;
+    single.textContent = data.verdict;
+    multi.hidden = true;
+  } else {
+    single.hidden = true;
+    single.textContent = "";
+    const reads = families.filter((f) => f.verdict);
+    for (const f of reads) {
+      const p = document.createElement("p");
+      const who = document.createElement("b");
+      who.textContent = f.label + ": ";
+      p.append(who, document.createTextNode(f.verdict));
+      multi.append(p);
+    }
+    multi.hidden = reads.length === 0;
+  }
+  card.hidden = false;
+}
+
+async function loadWalkforward(file) {
+  try {
+    const query = file ? "?file=" + encodeURIComponent(file) : "";
+    const data = await fetchJSON("/api/walkforward" + query);
+    if (!data.available && data.missing) {
+      // The file vanished after the list was drawn; fall back to the newest.
+      return loadWalkforward();
+    }
+    renderWalkforward(data);
+  } catch (err) {
+    // A missing study is a normal state, not an error worth shouting about.
+    state.walkforward = null;
+    $("walkforward").hidden = true;
+  }
+}
+
+$("wfStudy").addEventListener("change", async () => {
+  const file = $("wfStudy").value;
+  if (!file) return;
+  const err = $("wfError");
+  err.hidden = true;
+  err.textContent = "";
+  try {
+    const data = await fetchJSON("/api/walkforward?file=" + encodeURIComponent(file));
+    if (!data.available && data.missing) {
+      await loadWalkforward();
+      return;
+    }
+    renderWalkforward(data);
+  } catch (e) {
+    err.textContent = "Could not load that study: " + e.message;
+    err.hidden = false;
+  }
+});
+
+async function runWalkforward() {
+  const study = state.walkforward;
+  const btn = $("wfRun");
+  const err = $("wfError");
+  if (!study || btn.disabled) return;
+
+  const markets = Array.from(document.querySelectorAll("#wfMarkets input:checked"))
+    .map((el) => el.value);
+  if (!markets.length) {
+    err.textContent = "Pick at least one market to run the study.";
+    err.hidden = false;
+    const first = document.querySelector("#wfMarkets input");
+    if (first) first.focus();
+    return;
+  }
+
+  const payload = {
+    family: $("wfFamily").value || "both",
+    symbols: markets.join(","),
+  };
+  const timeframe = $("wfTimeframe").value;
+  if (timeframe) payload.timeframe = timeframe;
+  const folds = Number($("wfFolds").value);
+  if (Number.isFinite(folds)) payload.folds = folds;
+
+  const controls = Array.from(
+    document.querySelectorAll("#wfControls select, #wfControls input, #wfStudy")
+  );
+  for (const el of controls) el.disabled = true;
+  btn.disabled = true;
+  btn.textContent = "running…";
+  $("walkforward").setAttribute("aria-busy", "true");
+  err.hidden = true;
+  err.textContent = "";
+  try {
+    const fresh = await fetchJSON("/api/walkforward/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    renderWalkforward(fresh);
+    announce("Walk-forward study finished and the card was updated.");
+  } catch (e) {
+    err.textContent = "Could not rerun the study: " + e.message;
+    err.hidden = false;
+    announce("Walk-forward study failed.");
+  } finally {
+    for (const el of controls) el.disabled = false;
+    btn.disabled = false;
+    btn.textContent = "Run again";
+    $("walkforward").removeAttribute("aria-busy");
+  }
+}
+
+$("wfRun").addEventListener("click", () => { runWalkforward(); });
+
+async function loadPaper() {
+  try {
+    renderPaper(await fetchJSON("/api/paper"));
+  } catch (err) {
+    const stateEl = $("paperState");
+    stateEl.textContent = "unavailable";
+    stateEl.className = "paperstate";
+    $("paperReason").textContent = "Could not read results/paper/.";
+    $("paperHint").hidden = true;
+    $("paperWhen").textContent = "";
+    $("paperVerdict").textContent = "";
+    $("paperMeta").title = "";
+    $("paperPulse").hidden = true;
+  }
+}
+
 function renderRunPicker() {
   const sel = $("runPicker");
   sel.textContent = "";
@@ -2251,6 +3108,116 @@ function showError(err) {
   $("fragility").hidden = true;
 }
 
+/* -- excess / breadth panel (read from the frozen source of truth) ------ */
+
+const EXCESS_PATH = "/results/dashboard_excess.json";
+window.__attemptedExcessLoad = false;
+
+async function loadExcess() {
+  const res = await fetch(EXCESS_PATH, { cache: "no-store" });
+  if (!res.ok) {
+    console.warn("excess data unavailable:", res.status);
+    return;
+  }
+  const data = await res.json().catch(() => null);
+  if (!data) return;
+  window.__attemptedExcessLoad = true;
+  renderExcess(data);
+}
+
+function renderExcess(data) {
+  const paper = data.paper;
+  const breadth = data.breadth;
+  const open = $("excessPanel");
+  if (!open) return;
+
+  $("excessBasedOn").textContent = data.based_on;
+
+  $("excessTitle").textContent = `${paper.symbol} ${paper.timeframe}  ${paper.start} → ${paper.end}`;
+  $("excessSub").textContent = `from ${paper.file}  ·  ${paper.trades} trades  ·  generated ${data.generated}`;
+
+  $("excessExcess").textContent = fmt.signedPct(paper.excess_return_pct);
+  $("excessBench").textContent = fmt.pct(paper.buy_hold_return_pct);
+  $("excessTotalReturn").textContent = fmt.signedPct(paper.total_return_pct);
+  $("excessSharpe").textContent = fmt.num(paper.sharpe, 2);
+  $("excessMaxDD").textContent = fmt.signedPct(paper.max_drawdown_pct);
+  $("excessBarsInMarket").textContent = fmt.signedPct(paper.bars_in_market_pct);
+  $("excessFees").textContent = fmt.signedPct(paper.fees_pct_of_start);
+  $("excessRead").textContent = paper.verdict;
+  $("excessRead").classList.toggle("warn", data.breadth.beat_buy_hold_pct <= 0);
+
+  $("breadthPlanned").textContent = `${breadth.planned} planned · ${breadth.ran} ran`;
+  $("breadthBeat").textContent = fmt.signedPct(breadth.beat_buy_hold_pct);
+  $("breadthClean").textContent = fmt.signedPct(breadth.clean_pct);
+  $("breadthMedianExcess").textContent = fmt.signedPct(breadth.median_excess_pct);
+  $("breadthMedianReturn").textContent = fmt.signedPct(breadth.median_total_return_pct);
+  $("breadthMedianSharpe").textContent = fmt.num(breadth.median_sharpe, 2);
+  $("breadthMedianDD").textContent = fmt.signedPct(breadth.median_max_drawdown_pct);
+  $("breadthTotalTrades").textContent = String(breadth.total_trades);
+  $("breadthBestCell").textContent = breadth.best_cell;
+  $("breadthBestExcess").textContent = fmt.signedPct(breadth.best_excess_pct);
+
+  const mkt = $("breadthByMarket");
+  mkt.textContent = "";
+  for (const row of breadth.by_market ?? []) {
+    const li = document.createElement("li");
+    li.className = "mktrow";
+    const name = document.createElement("span");
+    name.className = "mktname";
+    name.textContent = row.market;
+    const cells = document.createElement("span");
+    cells.className = "mktdims";
+    cells.textContent = `${row.cells} cells · median excess ${fmt.signedPct(row.median_excess_pct)}`;
+    const best = document.createElement("span");
+    best.className = "mktbest";
+    best.textContent = `best ${fmt.signedPct(row.best_excess_pct)}`;
+    li.append(name, cells, best);
+    mkt.appendChild(li);
+  }
+
+  const nl = $("breadthNulls");
+  nl.textContent = "";
+  for (const n of breadth.null_tests ?? []) {
+    const li = document.createElement("li");
+    li.className = "nulrow";
+    const label = document.createElement("span");
+    label.className = "nullabel";
+    label.textContent = n.market;
+    const stats = document.createElement("span");
+    stats.className = "nulstats";
+    stats.innerHTML = `actual ${fmt.signedPct(n.actual_return_pct)} · null median ${fmt.signedPct(n.null_median_pct)} · p95 ${fmt.signedPct(n.null_p95_pct)} · p ${fmt.num(n.p_value)}`;
+    li.append(label, stats);
+    nl.appendChild(li);
+  }
+
+  $("excessInterpretation").textContent = breadth.interpretation;
+  $("excessNextQuestion").textContent = breadth.next_question;
+
+  const notes = $("excessNotes");
+  notes.textContent = "";
+  for (const n of data.notes) {
+    const li = document.createElement("li");
+    li.textContent = n;
+    notes.appendChild(li);
+  }
+
+  open.hidden = false;
+}
+
+function toggleExcess() {
+  const open = $("excessPanel");
+  if (!open.open) {
+    loadExcess().catch(showError);
+    open.showModal();
+  } else {
+    open.close();
+  }
+}
+
+$("openExcess").addEventListener("click", toggleExcess);
+$("openExcessAlt").addEventListener("click", toggleExcess);
+$("excessClose").addEventListener("click", () => $("excessPanel").close());
+
 let resizeTimer = null;
 new ResizeObserver(() => {
   clearTimeout(resizeTimer);
@@ -2262,7 +3229,28 @@ reduceMotion.addEventListener("change", () => {
   if (state.data) draw();
 });
 
+/* The paper card is a one-line status strip on phones and a full card on wide
+   screens. Follow the breakpoint so resizing does not leave it half open. */
+const paperWide = window.matchMedia("(min-width: 901px)");
+function syncPaperCard() {
+  const card = $("paperCard");
+  if (card) card.open = paperWide.matches;
+}
+paperWide.addEventListener("change", syncPaperCard);
+syncPaperCard();
+
+// The header pill is the shortcut to all of that; keep its open/closed state
+// in step with the card, however the card was toggled.
+$("paperPulse").addEventListener("click", revealPaperCard);
+$("paperBack").addEventListener("click", returnToTop);
+$("paperCard").addEventListener("toggle", () => { syncPulseExpanded(); syncBackToTop(); });
+window.addEventListener("scroll", syncBackToTop, { passive: true });
+syncPulseExpanded();
+syncBackToTop();
+
 initCursor();
+loadPaper();
+loadWalkforward();
 loadRuns().catch(showError);
 </script>
 </body>
